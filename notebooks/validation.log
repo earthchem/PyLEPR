@@ -1,0 +1,7 @@
+ERROR(validate_chem_error_columns): TiO2_err missing from chemistry data columns
+ERROR(validate_chem_error_columns): FeO*_err missing from chemistry data columns
+ERROR(validate_chem_error_columns): FeOtot_err missing from chemistry data columns
+ERROR(validate_chem_error_columns): Al2O3_err missing from chemistry data columns
+ERROR(validate_chem_error_columns): MgO_err missing from chemistry data columns
+CRITICAL(validate_chem_units): Al2O3 does not provide any units
+CRITICAL(validate_chem_method): MgO does not provide any method id
