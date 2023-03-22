@@ -6,6 +6,6 @@
 ---> CRITICAL_(validate_chem_units):: 'Al2O3' does not provide any units.
 ---> CRITICAL_(validate_chem_method):: 'MgO' does not provide any method id.
 ---> ERROR_(numeric_chem_data_not_valid):: '(1)', the 'SiO2_err' value for exp_run 'Run_1', is not a valid number.
----> ERROR_(chem_measurement_limit_not_valid):: '<0.7', the 'TiO2' value for exp_run 'Run_4', is not valid. Instead give just the value and indicate limit using field 'WHICH-ONE'.
+---> ERROR_(chem_measurement_limit_not_valid):: '<0.7', the 'TiO2' value for exp_run 'Run_4', is not valid. Instead give just the value and indicate limit using field '????, Ask roger'.
 ---> ERROR_(chem_not_detected_not_valid):: 'nd', the 'TiO2' value for exp_run 'Run_5', is not valid. If not detected use vocabulary 'bdl'.
 ---> ERROR_(chem_not_measured_not_valid):: '-', the 'TiO2' value for exp_run 'Run_6', is not valid. If not measured leave entry blank.
