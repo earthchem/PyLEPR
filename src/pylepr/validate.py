@@ -33,7 +33,7 @@ def extract_chem_dat(upload_data):
     return chem_dat, chem_dat_info
 
 
-def validate_chem_error_columns(chem_dat_info):
+def _validate_chem_error_columns(chem_dat_info):
     columns = chem_dat_info.columns
     meas_cols = [col for col in columns if not col.endswith('_err') ]
     for col in meas_cols:
@@ -41,21 +41,21 @@ def validate_chem_error_columns(chem_dat_info):
             logging.error(f"'{col}_err' missing from chemistry data columns")
             
 
-def validate_chem_units(chem_dat_info):
+def _validate_chem_units(chem_dat_info):
     for (col, dat) in chem_dat_info.T.iterrows():
         if dat.unit is np.nan:
             logging.critical(f"'{col}' does not provide any units")
             
-def validate_chem_method(chem_dat_info):
+def _validate_chem_method(chem_dat_info):
     for (col, dat) in chem_dat_info.T.iterrows():
         if dat.method_id is np.nan:
             logging.critical(f"'{col}' does not provide any method id")
             
 
 def validate_chem_data_info(chem_dat_info):
-    validate_chem_error_columns(chem_dat_info)
-    validate_chem_units(chem_dat_info)
-    validate_chem_method(chem_dat_info)
+    _validate_chem_error_columns(chem_dat_info)
+    _validate_chem_units(chem_dat_info)
+    _validate_chem_method(chem_dat_info)
     
     
     
@@ -66,21 +66,21 @@ def validate_chem_data_info(chem_dat_info):
 
         
  
-def chem_not_detected_not_valid(val, chem, run_id):
+def _chem_not_detected_not_valid(val, chem, run_id):
     if val=='nd':
         logging.error(f"'{val}', the '{chem}' value for exp_run '{run_id}', is not valid. If not detected use vocabulary 'bdl'")
         return True
     
     return False
 
-def chem_not_measured_not_valid(val, chem, run_id):
+def _chem_not_measured_not_valid(val, chem, run_id):
     if val=='-':
         logging.error(f"'{val}', the '{chem}' value for exp_run '{run_id}', is not valid. If not measured leave entry blank")
         return True
     
     return False
 
-def chem_measurement_limit_not_valid(val, chem, run_id):
+def _chem_measurement_limit_not_valid(val, chem, run_id):
     if type(val) is not str:
         return False
     
@@ -90,7 +90,7 @@ def chem_measurement_limit_not_valid(val, chem, run_id):
     
     return False
         
-def numeric_chem_data_not_valid(val, chem, run_id):
+def _numeric_chem_data_not_valid(val, chem, run_id):
     if type(val) is str:
         logging.error(f"'{val}', the '{chem}' value for exp_run '{run_id}', is not a valid number")
         return True
@@ -102,16 +102,16 @@ def validate_chem_data(chem_dat):
     for ichem_col, ichem_dat in chem_dat.T.iterrows():
         chem = ichem_dat.name
         for run_id, val in ichem_dat.items():
-            if chem_not_detected_not_valid(val, chem, run_id):
+            if _chem_not_detected_not_valid(val, chem, run_id):
                 continue
             
-            if chem_not_measured_not_valid(val, chem, run_id):
+            if _chem_not_measured_not_valid(val, chem, run_id):
                 continue
             
-            if chem_measurement_limit_not_valid(val, chem, run_id):
+            if _chem_measurement_limit_not_valid(val, chem, run_id):
                 continue
             
-            numeric_chem_data_not_valid(val, chem, run_id)
+            _numeric_chem_data_not_valid(val, chem, run_id)
             
             
 def validate_upload(upload_data):
