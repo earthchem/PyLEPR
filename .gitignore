@@ -1,2 +1,5 @@
 *.~lock*
 data/.~lock.upload_validation.xlsx#
+
+*.pyc
+*.egg-info
