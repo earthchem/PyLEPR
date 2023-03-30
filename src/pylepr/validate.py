@@ -42,59 +42,92 @@ def extract_chem_dat(upload_data, format=CHEM_DATA_INFO):
     return chem_dat, chem_dat_info
 
 
-def _validate_chem_error_columns(chem_dat_info):
+# def _get_chem_info_cell(cell_data, format):
+#     col_num = (format['chem_dat_col_index'] + 
+#                cell_data['col_ind']+1)
+#     col_str = get_column_letter(col_num)
+#     row_num = (format['header_row_num'] +
+#                format['metadata_header_row_num'] +
+#                cell_data['row_ind']+1)
+#     return f'{col_str}{row_num}'
+
+def _validate_chem_error_columns(chem_dat_info, format):
     columns = chem_dat_info.columns
     meas_cols = [col for col in columns if not col.endswith('_err') ]
     for col in meas_cols:
+        # col_str = get_column_letter(col)
         if col+'_err' not in columns:
             logging.error(f"'{col}_err' missing from chemistry data columns")
             
 
-def _validate_chem_units(chem_dat_info):
-    for (col, dat) in chem_dat_info.T.iterrows():
+def _validate_chem_units(chem_dat_info, format):
+    for col_ind, (col, dat) in enumerate(chem_dat_info.T.iterrows()):
+        col_num = format['chem_dat_col_index']+col_ind+1
+        col_str = get_column_letter(col_num)
+        row_num = 4
+        cell_id = f"{col_str}{row_num}"
         if dat.unit is np.nan:
-            logging.critical(f"'{col}' does not provide any units")
+            logging.critical(f"<<cell {cell_id}>>: '{col}' does not provide any units")
             
-def _validate_chem_method(chem_dat_info):
+def _validate_chem_method(chem_dat_info, format):
     for (col, dat) in chem_dat_info.T.iterrows():
+        
         if dat.method_id is np.nan:
             logging.critical(f"'{col}' does not provide any method id")
             
 
-def validate_chem_data_info(chem_dat_info):
-    _validate_chem_error_columns(chem_dat_info)
-    _validate_chem_units(chem_dat_info)
-    _validate_chem_method(chem_dat_info)
+def validate_chem_data_info(chem_dat_info,
+                            format=CHEM_DATA_INFO):
+    _validate_chem_error_columns(chem_dat_info, format)
+    _validate_chem_units(chem_dat_info, format)
+    _validate_chem_method(chem_dat_info, format)
     
     
 
         
  
-def _chem_not_detected_not_valid(val, chem, run_id):
+def _chem_not_detected_not_valid(cell_data, format):
+    val, chem, run_id = [cell_data[key] for key in 
+                         ['val','chem','run_id']]
+        
+    cell_id = _get_chem_data_cell(cell_data, format)
+    
+    
     if val=='nd':
-        logging.error(f"'{val}', the '{chem}' value for exp_run '{run_id}', is not valid. If not detected use vocabulary 'bdl'")
+        logging.error(f"<<cell {cell_id}>>: '{val}', the '{chem}' value for exp_run '{run_id}' is not valid. If not detected use vocabulary 'bdl'")
         return True
     
     return False
 
-def _chem_not_measured_not_valid(val, chem, run_id):
+def _chem_not_measured_not_valid(cell_data, format):
+    val, chem, run_id = [cell_data[key] for key in 
+                         ['val','chem','run_id']]
+        
+    cell_id = _get_chem_data_cell(cell_data, format)
+    
+    
     if val=='-':
-        logging.error(f"'{val}', the '{chem}' value for exp_run '{run_id}', is not valid. If not measured leave entry blank")
+        logging.error(f"<<cell {cell_id}>>: '{val}', the '{chem}' value for exp_run '{run_id}' is not valid. If not measured leave entry blank")
         return True
     
     return False
 
-def _chem_measurement_limit_not_valid(val, chem, run_id):
+def _chem_measurement_limit_not_valid(cell_data, format):
+    val, chem, run_id = [cell_data[key] for key in 
+                         ['val','chem','run_id']]
+    
+    cell_id = _get_chem_data_cell(cell_data, format)
+    
     if type(val) is not str:
         return False
     
     if val.startswith('>') or val.startswith('<'):
-        logging.error(f"'{val}', the '{chem}' value for exp_run '{run_id}', is not valid. Instead give just the value and indicate limit using field '????, Ask roger'")
+        logging.error(f"<<cell {cell_id}>>: '{val}', the '{chem}' value for exp_run '{run_id}' is not valid. Instead give just the value and indicate limit using field '????, Ask roger'")
         return True
     
     return False
 
-def get_cell(cell_data, format):
+def _get_chem_data_cell(cell_data, format):
     col_num = (format['chem_dat_col_index'] + 
                cell_data['col_ind']+1)
     col_str = get_column_letter(col_num)
@@ -108,7 +141,7 @@ def _numeric_chem_data_not_valid(cell_data, format):
     val, chem, run_id = [cell_data[key] for key in 
                          ['val','chem','run_id']]
 
-    cell_id = get_cell(cell_data, format)
+    cell_id = _get_chem_data_cell(cell_data, format)
     if type(val) is str:
         logging.error(f"<<cell {cell_id}>>: '{chem}' value for exp_run '{run_id}' is invalid. '{val}' is not a valid number.")
         return True
@@ -123,13 +156,13 @@ def validate_chem_data(chem_dat, format=CHEM_DATA_INFO):
             cell_data = {'val':val, 'chem':chem, 
                          'run_id':run_id, 'col_ind':col_ind,
                          'row_ind':row_ind}
-            if _chem_not_detected_not_valid(val, chem, run_id):
+            if _chem_not_detected_not_valid(cell_data, format):
                 continue
             
-            if _chem_not_measured_not_valid(val, chem, run_id):
+            if _chem_not_measured_not_valid(cell_data, format):
                 continue
             
-            if _chem_measurement_limit_not_valid(val, chem, run_id):
+            if _chem_measurement_limit_not_valid(cell_data, format):
                 continue
             
             

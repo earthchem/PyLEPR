@@ -3,9 +3,9 @@
 ---> ERROR..(_validate_chem_error_columns):: 'FeOtot_err' missing from chemistry data columns
 ---> ERROR..(_validate_chem_error_columns):: 'Al2O3_err' missing from chemistry data columns
 ---> ERROR..(_validate_chem_error_columns):: 'MgO_err' missing from chemistry data columns
----> CRITICAL..(_validate_chem_units):: 'Al2O3' does not provide any units
+---> CRITICAL..(_validate_chem_units):: <<cell S4>>: 'Al2O3' does not provide any units
 ---> CRITICAL..(_validate_chem_method):: 'MgO' does not provide any method id
 ---> ERROR..(_numeric_chem_data_not_valid):: <<cell O7>>: 'SiO2_err' value for exp_run 'Run_1' is invalid. '(1)' is not a valid number.
----> ERROR..(_chem_measurement_limit_not_valid):: '<0.7', the 'TiO2' value for exp_run 'Run_4', is not valid. Instead give just the value and indicate limit using field '????, Ask roger'
----> ERROR..(_chem_not_detected_not_valid):: 'nd', the 'TiO2' value for exp_run 'Run_5', is not valid. If not detected use vocabulary 'bdl'
----> ERROR..(_chem_not_measured_not_valid):: '-', the 'TiO2' value for exp_run 'Run_6', is not valid. If not measured leave entry blank
+---> ERROR..(_chem_measurement_limit_not_valid):: <<cell P10>>: '<0.7', the 'TiO2' value for exp_run 'Run_4' is not valid. Instead give just the value and indicate limit using field '????, Ask roger'
+---> ERROR..(_chem_not_detected_not_valid):: <<cell P11>>: 'nd', the 'TiO2' value for exp_run 'Run_5' is not valid. If not detected use vocabulary 'bdl'
+---> ERROR..(_chem_not_measured_not_valid):: <<cell P12>>: '-', the 'TiO2' value for exp_run 'Run_6' is not valid. If not measured leave entry blank
