@@ -70,10 +70,13 @@ def _validate_chem_units(chem_dat_info, format):
             logging.critical(f"<<cell {cell_id}>>: '{col}' does not provide any units")
             
 def _validate_chem_method(chem_dat_info, format):
-    for (col, dat) in chem_dat_info.T.iterrows():
-        
+    for col_ind, (col, dat) in enumerate(chem_dat_info.T.iterrows()):
+        col_num = format['chem_dat_col_index']+col_ind+1
+        col_str = get_column_letter(col_num)
+        row_num = 3
+        cell_id = f"{col_str}{row_num}"
         if dat.method_id is np.nan:
-            logging.critical(f"'{col}' does not provide any method id")
+            logging.critical(f"<<cell {cell_id}>>: '{col}' does not provide any method id")
             
 
 def validate_chem_data_info(chem_dat_info,
