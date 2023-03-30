@@ -7,7 +7,7 @@ from openpyxl.utils.cell import get_column_letter
 log_filename = 'validation.log'
 logging.basicConfig(filename=log_filename,
                     filemode='w',
-                    format="---> %(levelname)s_(%(funcName)s):: %(message)s.")
+                    format="---> %(levelname)s..(%(funcName)s):: %(message)s")
 
 def print_log_file(log_filename=log_filename):
     with open(log_filename, 'r') as fin:
@@ -19,22 +19,23 @@ def print_log_file(log_filename=log_filename):
 CHEM_DATA_INFO = {
     'sheetname': '6 Run Products',
     'header_row_num': 4,
+    'metadata_header_row_num': 2,
     'chem_dat_col_index': 13
 }
 
-def extract_chem_dat(upload_data, info=CHEM_DATA_INFO):
-    run_products = upload_data[info['sheetname']]
+def extract_chem_dat(upload_data, format=CHEM_DATA_INFO):
+    run_products = upload_data[format['sheetname']]
     
     
-    run_names = run_products.iloc[info['header_row_num']+1:,0]
+    run_names = run_products.iloc[format['header_row_num']+1:,0]
 
-    dat = run_products.iloc[:,info['chem_dat_col_index']:]
+    dat = run_products.iloc[:,format['chem_dat_col_index']:]
     dat.columns = dat.iloc[0]
     dat = dat.iloc[1:]
     chem_dat_info = dat.iloc[:2]
     chem_dat_info.index = ['method_id','unit']
 
-    chem_dat = dat.iloc[info['header_row_num']:]
+    chem_dat = dat.iloc[format['header_row_num']:]
     chem_dat
     chem_dat.index = run_names
 
@@ -92,19 +93,36 @@ def _chem_measurement_limit_not_valid(val, chem, run_id):
         return True
     
     return False
+
+def get_cell(cell_data, format):
+    col_num = (format['chem_dat_col_index'] + 
+               cell_data['col_ind']+1)
+    col_str = get_column_letter(col_num)
+    row_num = (format['header_row_num'] +
+               format['metadata_header_row_num'] +
+               cell_data['row_ind']+1)
+    return f'{col_str}{row_num}'
         
-def _numeric_chem_data_not_valid(val, chem, run_id):
+def _numeric_chem_data_not_valid(cell_data, format):
+
+    val, chem, run_id = [cell_data[key] for key in 
+                         ['val','chem','run_id']]
+
+    cell_id = get_cell(cell_data, format)
     if type(val) is str:
-        logging.error(f"'{val}', the '{chem}' value for exp_run '{run_id}', is not a valid number")
+        logging.error(f"<<cell {cell_id}>>: '{chem}' value for exp_run '{run_id}' is invalid. '{val}' is not a valid number.")
         return True
     
     return False
 
 
-def validate_chem_data(chem_dat):
-    for ichem_col, ichem_dat in chem_dat.T.iterrows():
+def validate_chem_data(chem_dat, format=CHEM_DATA_INFO):
+    for col_ind, (ichem_col, ichem_dat) in enumerate(chem_dat.T.iterrows()):
         chem = ichem_dat.name
-        for run_id, val in ichem_dat.items():
+        for row_ind, (run_id, val) in enumerate(ichem_dat.items()):
+            cell_data = {'val':val, 'chem':chem, 
+                         'run_id':run_id, 'col_ind':col_ind,
+                         'row_ind':row_ind}
             if _chem_not_detected_not_valid(val, chem, run_id):
                 continue
             
@@ -114,7 +132,8 @@ def validate_chem_data(chem_dat):
             if _chem_measurement_limit_not_valid(val, chem, run_id):
                 continue
             
-            _numeric_chem_data_not_valid(val, chem, run_id)
+            
+            _numeric_chem_data_not_valid(cell_data, format)
             
             
 def validate_upload(upload_data):
