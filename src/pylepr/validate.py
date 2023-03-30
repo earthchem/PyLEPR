@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 import pandas as pd
+from openpyxl.utils.cell import get_column_letter
 
 log_filename = 'validation.log'
 logging.basicConfig(filename=log_filename,
@@ -13,20 +14,27 @@ def print_log_file(log_filename=log_filename):
         print(fin.read())
         
         
-def extract_chem_dat(upload_data):
-    run_products = upload_data['6 Run Products']
-    
-    header_row_num = 4
-    chem_dat_col_index = 13
-    run_names = run_products.iloc[header_row_num+1:,0]
 
-    dat = run_products.iloc[:,chem_dat_col_index:]
+
+CHEM_DATA_INFO = {
+    'sheetname': '6 Run Products',
+    'header_row_num': 4,
+    'chem_dat_col_index': 13
+}
+
+def extract_chem_dat(upload_data, info=CHEM_DATA_INFO):
+    run_products = upload_data[info['sheetname']]
+    
+    
+    run_names = run_products.iloc[info['header_row_num']+1:,0]
+
+    dat = run_products.iloc[:,info['chem_dat_col_index']:]
     dat.columns = dat.iloc[0]
     dat = dat.iloc[1:]
     chem_dat_info = dat.iloc[:2]
     chem_dat_info.index = ['method_id','unit']
 
-    chem_dat = dat.iloc[header_row_num:]
+    chem_dat = dat.iloc[info['header_row_num']:]
     chem_dat
     chem_dat.index = run_names
 
@@ -58,11 +66,6 @@ def validate_chem_data_info(chem_dat_info):
     _validate_chem_method(chem_dat_info)
     
     
-    
-    
-# ichem_dat = chem_dat.iloc[:,1]
-
-# def validate_numeric_chem_data(ichem_dat):
 
         
  
