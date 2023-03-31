@@ -19,7 +19,9 @@ class ChemDataInfo:
     sheetname: str
     header_row_num: int
     metadata_header_row_num: int
-    chem_dat_col_index: 13
+    chem_dat_col_index: int
+    method_row_num: int = 3
+    unit_row_num: int = 4
     
 CHEM_DATA_INFO = ChemDataInfo('6 Run Products', 4, 2, 13)
 
@@ -52,6 +54,7 @@ def extract_chem_dat(upload_data, format=CHEM_DATA_INFO):
 #                cell_data['row_ind']+1)
 #     return f'{col_str}{row_num}'
 
+
 def _validate_chem_error_columns(chem_dat_info, format):
     columns = chem_dat_info.columns
     meas_cols = [col for col in columns if not col.endswith('_err') ]
@@ -65,7 +68,7 @@ def _validate_chem_units(chem_dat_info, format:ChemDataInfo):
     for col_ind, (col, dat) in enumerate(chem_dat_info.T.iterrows()):
         col_num = format.chem_dat_col_index+col_ind+1
         col_str = get_column_letter(col_num)
-        row_num = 4
+        row_num = format.unit_row_num
         cell_id = f"{col_str}{row_num}"
         if dat.unit is np.nan:
             logging.critical(f"<<cell {cell_id}>>: '{col}' does not provide any units")
@@ -74,7 +77,7 @@ def _validate_chem_method(chem_dat_info, format:ChemDataInfo):
     for col_ind, (col, dat) in enumerate(chem_dat_info.T.iterrows()):
         col_num = format.chem_dat_col_index+col_ind+1
         col_str = get_column_letter(col_num)
-        row_num = 3
+        row_num = format.method_row_num
         cell_id = f"{col_str}{row_num}"
         if dat.method_id is np.nan:
             logging.critical(f"<<cell {cell_id}>>: '{col}' does not provide any method id")
