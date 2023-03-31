@@ -8,7 +8,8 @@ from openpyxl.utils.cell import get_column_letter
 log_filename = 'validation.log'
 logging.basicConfig(filename=log_filename,
                     filemode='w',
-                    format="---> %(levelname)s..(%(funcName)s):: %(message)s")
+                    format="---> %(levelname)s..(%(funcName)s):: %(message)s", 
+                    force = True)
 
 def print_log_file(log_filename=log_filename):
     with open(log_filename, 'r') as fin:
