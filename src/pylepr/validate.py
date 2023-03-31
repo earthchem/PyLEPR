@@ -1,4 +1,5 @@
 import logging
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -13,29 +14,29 @@ def print_log_file(log_filename=log_filename):
     with open(log_filename, 'r') as fin:
         print(fin.read())
         
-        
+@dataclass
+class ChemDataInfo:
+    sheetname: str
+    header_row_num: int
+    metadata_header_row_num: int
+    chem_dat_col_index: 13
+    
+CHEM_DATA_INFO = ChemDataInfo('6 Run Products', 4, 2, 13)
 
-
-CHEM_DATA_INFO = {
-    'sheetname': '6 Run Products',
-    'header_row_num': 4,
-    'metadata_header_row_num': 2,
-    'chem_dat_col_index': 13
-}
 
 def extract_chem_dat(upload_data, format=CHEM_DATA_INFO):
-    run_products = upload_data[format['sheetname']]
+    run_products = upload_data[format.sheetname]
     
     
-    run_names = run_products.iloc[format['header_row_num']+1:,0]
+    run_names = run_products.iloc[format.header_row_num+1:,0]
 
-    dat = run_products.iloc[:,format['chem_dat_col_index']:]
+    dat = run_products.iloc[:,format.chem_dat_col_index:]
     dat.columns = dat.iloc[0]
     dat = dat.iloc[1:]
     chem_dat_info = dat.iloc[:2]
     chem_dat_info.index = ['method_id','unit']
 
-    chem_dat = dat.iloc[format['header_row_num']:]
+    chem_dat = dat.iloc[format.header_row_num:]
     chem_dat
     chem_dat.index = run_names
 
@@ -60,18 +61,18 @@ def _validate_chem_error_columns(chem_dat_info, format):
             logging.error(f"'{col}_err' missing from chemistry data columns")
             
 
-def _validate_chem_units(chem_dat_info, format):
+def _validate_chem_units(chem_dat_info, format:ChemDataInfo):
     for col_ind, (col, dat) in enumerate(chem_dat_info.T.iterrows()):
-        col_num = format['chem_dat_col_index']+col_ind+1
+        col_num = format.chem_dat_col_index+col_ind+1
         col_str = get_column_letter(col_num)
         row_num = 4
         cell_id = f"{col_str}{row_num}"
         if dat.unit is np.nan:
             logging.critical(f"<<cell {cell_id}>>: '{col}' does not provide any units")
             
-def _validate_chem_method(chem_dat_info, format):
+def _validate_chem_method(chem_dat_info, format:ChemDataInfo):
     for col_ind, (col, dat) in enumerate(chem_dat_info.T.iterrows()):
-        col_num = format['chem_dat_col_index']+col_ind+1
+        col_num = format.chem_dat_col_index+col_ind+1
         col_str = get_column_letter(col_num)
         row_num = 3
         cell_id = f"{col_str}{row_num}"
@@ -89,7 +90,8 @@ def validate_chem_data_info(chem_dat_info,
 
         
  
-def _chem_not_detected_not_valid(cell_data, format):
+def _chem_not_detected_not_valid(cell_data, 
+                                 format:ChemDataInfo):
     val, chem, run_id = [cell_data[key] for key in 
                          ['val','chem','run_id']]
         
@@ -102,7 +104,8 @@ def _chem_not_detected_not_valid(cell_data, format):
     
     return False
 
-def _chem_not_measured_not_valid(cell_data, format):
+def _chem_not_measured_not_valid(cell_data, 
+                                 format:ChemDataInfo):
     val, chem, run_id = [cell_data[key] for key in 
                          ['val','chem','run_id']]
         
@@ -115,7 +118,8 @@ def _chem_not_measured_not_valid(cell_data, format):
     
     return False
 
-def _chem_measurement_limit_not_valid(cell_data, format):
+def _chem_measurement_limit_not_valid(cell_data, 
+                                      format:ChemDataInfo):
     val, chem, run_id = [cell_data[key] for key in 
                          ['val','chem','run_id']]
     
@@ -130,16 +134,17 @@ def _chem_measurement_limit_not_valid(cell_data, format):
     
     return False
 
-def _get_chem_data_cell(cell_data, format):
-    col_num = (format['chem_dat_col_index'] + 
+def _get_chem_data_cell(cell_data, format:ChemDataInfo):
+    col_num = (format.chem_dat_col_index + 
                cell_data['col_ind']+1)
     col_str = get_column_letter(col_num)
-    row_num = (format['header_row_num'] +
-               format['metadata_header_row_num'] +
+    row_num = (format.header_row_num +
+               format.metadata_header_row_num +
                cell_data['row_ind']+1)
     return f'{col_str}{row_num}'
         
-def _numeric_chem_data_not_valid(cell_data, format):
+def _numeric_chem_data_not_valid(cell_data, 
+                                 format:ChemDataInfo):
 
     val, chem, run_id = [cell_data[key] for key in 
                          ['val','chem','run_id']]
