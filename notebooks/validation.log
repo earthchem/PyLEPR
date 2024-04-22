@@ -23,11 +23,13 @@
 --> ERROR_(validate_chem_method): 'FeO' (Excel Column Q) does not provide any method_id.
 --> ERROR_(validate_chem_method): 'Fe2O3t' (Excel Column R) does not provide any method_id.
 --> ERROR_(validate_chem_method): 'Total' (Excel Column S) does not provide any method_id.
---> ERROR_(validate_chemical_values): 0 in (Excel Cell I9) is not valid. Use 'bdl' if below detection limit and leave cell blank if not measured
+--> ERROR_(validate_chemical_values): 0 in (Excel Cell I9) is not valid. Use 'bdl' for below detection limit values and leave cell blank if not measured.
 --> ERROR_(validate_chemical_values): 'n.d.' (Excel Cell I10) is not valid. Use 'bdl' if below detection limit.
 --> ERROR_(validate_chemical_values): 'N.D' (Excel Cell I11) is not valid. Use 'bdl' if below detection limit.
---> ERROR_(validate_chemical_values): '≌' (Excel Cell I12) is not valid. Ensure correct symbol use and numeric value.
---> ERROR_(validate_chemical_values): 0 in (Excel Cell J9) is not valid. Use 'bdl' if below detection limit and leave cell blank if not measured
---> ERROR_(validate_chemical_values): '<0.7' (Excel Cell J10) is not valid. Ensure correct symbol use and numeric value.
+--> ERROR_(validate_chemical_values): '≌' (Excel Cell I12) is not valid. Remove ≌.
+--> WARNING_(validate_value): '≤0.3' (Excel Cell I14) contains a symbol.
+--> ERROR_(validate_chemical_values): 0 in (Excel Cell J9) is not valid. Use 'bdl' for below detection limit values and leave cell blank if not measured.
+--> WARNING_(validate_value): '<0.7' (Excel Cell J10) contains a symbol.
 --> ERROR_(validate_chemical_values): 'nd' (Excel Cell J11) is not valid. Use 'bdl' if below detection limit.
---> ERROR_(validate_chemical_values): '<abc' (Excel Cell K7) is not valid. Ensure correct symbol use and numeric value.
+--> WARNING_(validate_value): '<abc' (Excel Cell K7) contains a symbol.
+--> ERROR_(validate_chemical_values): '<abc' (Excel Cell K7) is not valid, as it is not numeric.

@@ -244,17 +244,46 @@ def validate_value(val, cell_location):
     Returns:
         str: An error message if the value is invalid, None otherwise.
     """
+
     if isinstance(val, str):
         val_lower = val.lower()
+        # Checking for symbols indicating limits and their correctness
+        if val_lower.startswith((">", "<", "≤", "≥")):
+            # Log initial detection of symbol
+            initial_message = f"'{val}' (Excel Cell {cell_location}) contains a symbol."
+            logging.warning(initial_message)
+
+            # Check numeric validity of the part after the symbol
+            numeric_part = val[1:].strip()
+            if not numeric_part.replace('.', '', 1).isdigit():
+                return f"'{val}' (Excel Cell {cell_location}) is not valid, as it is not numeric."
+            else:
+                return None  # If valid, no further checks are needed
+
+    if isinstance(val, str):  # Check if the value is a string to handle string-specific validations
+        val_lower = val.lower()  # Convert value to lowercase to standardize checks
+        # Check for non-detects and placeholder values
         if val_lower in ["nd", "n.d.", "n.d"]:
             return f"'{val}' (Excel Cell {cell_location}) is not valid. Use 'bdl' if below detection limit."
-        elif any(val_lower.startswith(sym) for sym in ["≤", "≥", ">", "<", "≌"]):
-            return f"'{val}' (Excel Cell {cell_location}) is not valid. Ensure correct symbol use and numeric value."
-
+        # Check for and validate symbols indicating limits
+        elif val_lower.startswith("≤"):
+            return f"'{val}' (Excel Cell {cell_location}) is not valid. Replace '≤' with '<='."
+        elif val_lower.startswith("≥"):
+            return f"'{val}' (Excel Cell {cell_location}) is not valid. Replace '≥' with '>='."
+        elif any(val_lower.startswith(sym) for sym in [">", "<", ">=", "<="]):
+            # Validate the numeric part after the symbol
+            numeric_part = val[1:].strip()
+            if not numeric_part.replace('.', '', 1).isdigit():
+                return f"'{val}' (Excel Cell {cell_location}) is not valid. The part after '{val[0]}' must be numeric."
+        elif "≌" in val_lower:
+            return f"'{val}' (Excel Cell {cell_location}) is not valid. Remove ≌."
+    # Handling for placeholders indicating no measurement
     elif val == "-":
         return f"'-' in (Excel Cell {cell_location}) is not valid. Leave cell blank if not measured."
+    # Handling zero with specific instructions
     elif val == 0:
-        return f"{val} in (Excel Cell {cell_location}) is not valid. Use 'bdl' if below detection limit and leave cell blank if not measured"
+        return f"0 in (Excel Cell {cell_location}) is not valid. Use 'bdl' for below detection limit values and leave cell blank if not measured."
     return None
+
 
 # %%
