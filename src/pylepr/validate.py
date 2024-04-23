@@ -1,8 +1,9 @@
 # %%
 
+import re
 import logging
-import numpy as np
 import pandas as pd
+from bs4 import BeautifulSoup
 
 # %%
 
@@ -17,7 +18,7 @@ def begin_logging(log_filename):
     logging.basicConfig(
         filename=log_filename,
         filemode="w",
-        format="--> %(levelname)s_(%(funcName)s): %(message)s",
+        format="--> %(levelname)s (%(funcName)s): %(message)s",
         force=True,
     )
 
@@ -75,9 +76,11 @@ def extract_chem_dat(upload_data, sheet, start_col, start_row):
     """
 
     run_products = upload_data[sheet]
+    column_names = run_products.iloc[start_row - 4]
+    run_products.columns = column_names
 
     start_col_idx = col_to_idx(start_col)
-    run_names = run_products.iloc[start_row:, 0]
+    run_names = run_products.iloc[start_row-2:, 0:2]
 
     dat = run_products.iloc[:, start_col_idx:]
     dat.columns = dat.iloc[0]
@@ -86,9 +89,10 @@ def extract_chem_dat(upload_data, sheet, start_col, start_row):
     chem_dat_info = dat.iloc[:2]
     chem_dat_info.index = ["method_id", "unit"]
 
-    chem_dat = dat.iloc[start_row - 1 :]
-    chem_dat
-    chem_dat.index = run_names
+    chem_dat = dat.iloc[start_row - 3 :]
+    chem_dat.index = run_names.iloc[:, 0]
+
+    chem_dat.insert(0, run_names.columns[1], run_names.iloc[:, 1].values)
 
     return chem_dat, chem_dat_info
 
@@ -96,7 +100,56 @@ def extract_chem_dat(upload_data, sheet, start_col, start_row):
 # %%
 
 
-def validate_column_names(chem_dat_info, start_col="H"):
+def phase_scrape(link="../data/pylepr_phases.html"):
+    """
+    Extracts data from the phase table within an HTML file and converts it to a DataFrame.
+
+    Parameters:
+        link (str): The file path or link to the HTML file to be scraped.
+                    Default is '../data/pylepr_phases.html'.
+
+    Returns:
+        pandas.DataFrame: A DataFrame containing the extracted table data, where each row represents
+                          a data record from the table and each column represents a field in the table.
+    """
+
+    # Open the HTML file
+    with open(link) as fp:
+        # Use a parser (html.parser) with BeautifulSoup
+        soup = BeautifulSoup(fp, "html.parser")
+
+    # Find the table by its role attribute
+    table = soup.find("table", {"role": "table"})
+
+    # Initialize a list to hold all rows of data
+    table_data = []
+
+    # Extract headers
+    headers = [th.text.strip() for th in table.find_all("th")]
+
+    # Extract all rows in the table
+    rows = table.find_all("tr")
+
+    # Iterate over each row
+    for row in rows:
+        # Extract text from each cell in the row
+        cols = [ele.text.strip() for ele in row.find_all("td")]
+        # Append non-empty lists to the table_data
+        if cols:
+            table_data.append(cols)
+
+    if not headers or not table_data:
+        raise ValueError("Table is missing headers or rows.")
+
+    df = pd.DataFrame(table_data, columns=headers)
+
+    return df
+
+
+# %%
+
+
+def validate_column_names(chem_dat_info, start_col):
     """
     Validates that column names in a DataFrame adhere to preferred naming conventions, ensures that totals are volatile-free.
     """
@@ -154,7 +207,7 @@ def validate_chem_error_columns(chem_dat_info):
             )
 
 
-def validate_chem_units(chem_dat_info, start_col="H"):
+def validate_chem_units(chem_dat_info, start_col):
     """
     Validates that each chemical data column has units specified.
     """
@@ -167,7 +220,7 @@ def validate_chem_units(chem_dat_info, start_col="H"):
             )
 
 
-def validate_chem_method(chem_dat_info, start_col="H"):
+def validate_chem_method(chem_dat_info, start_col):
     """
     Validates that each chemical data column has units specified.
     """
@@ -182,15 +235,15 @@ def validate_chem_method(chem_dat_info, start_col="H"):
             )
 
 
-def validate_metadata(chem_dat_info):
+def validate_metadata(chem_dat_info, start_col):
     """
     Executes all validation functions on the chem_dat_info.
     """
     try:
-        validate_column_names(chem_dat_info)
+        validate_column_names(chem_dat_info, start_col)
         validate_chem_error_columns(chem_dat_info)
-        validate_chem_units(chem_dat_info)
-        validate_chem_method(chem_dat_info)
+        validate_chem_units(chem_dat_info, start_col)
+        validate_chem_method(chem_dat_info, start_col)
         print("Metadata validation completed successfully.")
     except Exception as e:
         logging.error(f"An error occurred during validation: {e}")
@@ -200,32 +253,43 @@ def validate_metadata(chem_dat_info):
 # %%
 
 
-def validate_chemical_values(chem_dat, start_col="H", start_row=7):
+def validate_chemical_values(chem_dat, start_col, start_row):
     """
     Validates chemical data values within a DataFrame, logging any formatting issues or non-numeric errors.
     The function will print and log a completion message after processing all entries.
 
     Parameters:
         chem_dat (DataFrame): DataFrame containing the chemical data.
-        start_col (str): Column letter where chemical data starts (default 'H').
-        start_row (int): Row index where data entries begin (default 7).
+        start_col (str): Column letter where chemical data starts (default).
+        start_row (int): Row index where data entries begin (default).
     """
     try:
         start_col_idx = col_to_idx(start_col)
         for ichem_col, ichem_dat in chem_dat.T.iterrows():
             chem = ichem_dat.name
             column_index = chem_dat.columns.get_loc(chem) + start_col_idx
-            excel_column = idx_to_col(column_index)
+            # Fix column B for 'SPECIES' and 'phase list', use calculated columns for others
+            if chem in ["SPECIES", "phase list"]:
+                excel_column = "B"
+            else:
+                excel_column = idx_to_col(column_index)  # Default behavior for other columns
 
             for run_id, val in ichem_dat.items():
                 row_number = chem_dat.index.get_loc(run_id) + start_row
                 cell_location = f"{excel_column}{row_number}"
-                message = validate_value(val, cell_location)
+                # message = validate_value(val, cell_location)
+
+                if chem == "SPECIES":
+                    message = validate_full_phase(val, cell_location)
+                elif chem == "phase list":
+                    message = validate_phase_list(val, cell_location)
+                else:
+                    message = validate_value(val, cell_location)
 
                 if message:
                     logging.error(message)
                     continue  # Skip further checks if an error is already found
-        
+
         print("Chemical data validation completed successfully.")
 
     except Exception as e:
@@ -255,12 +319,14 @@ def validate_value(val, cell_location):
 
             # Check numeric validity of the part after the symbol
             numeric_part = val[1:].strip()
-            if not numeric_part.replace('.', '', 1).isdigit():
+            if not numeric_part.replace(".", "", 1).isdigit():
                 return f"'{val}' (Excel Cell {cell_location}) is not valid, as it is not numeric."
             else:
                 return None  # If valid, no further checks are needed
 
-    if isinstance(val, str):  # Check if the value is a string to handle string-specific validations
+    if isinstance(
+        val, str
+    ):  # Check if the value is a string to handle string-specific validations
         val_lower = val.lower()  # Convert value to lowercase to standardize checks
         # Check for non-detects and placeholder values
         if val_lower in ["nd", "n.d.", "n.d"]:
@@ -273,7 +339,7 @@ def validate_value(val, cell_location):
         elif any(val_lower.startswith(sym) for sym in [">", "<", ">=", "<="]):
             # Validate the numeric part after the symbol
             numeric_part = val[1:].strip()
-            if not numeric_part.replace('.', '', 1).isdigit():
+            if not numeric_part.replace(".", "", 1).isdigit():
                 return f"'{val}' (Excel Cell {cell_location}) is not valid. The part after '{val[0]}' must be numeric."
         elif "≌" in val_lower:
             return f"'{val}' (Excel Cell {cell_location}) is not valid. Remove ≌."
@@ -285,5 +351,58 @@ def validate_value(val, cell_location):
         return f"0 in (Excel Cell {cell_location}) is not valid. Use 'bdl' for below detection limit values and leave cell blank if not measured."
     return None
 
+
+def validate_full_phase(val, cell_location):
+    """
+    Validates a chemical phase value against a list of accepted phases, returning an error message if the value does not match any accepted phase.
+
+    Parameters:
+        val: The value to validate.
+        cell_location (str): The Excel cell location of the value for logging purposes.
+
+    Returns:
+        str: An error message if the value is invalid, None otherwise.
+    """
+
+    df = phase_scrape(link="../data/pylepr_phases.html")
+    accepted_phases = df["Description"].str.lower().tolist()
+
+    if isinstance(val, str):
+        val_lower = val.lower()  # Convert value to lowercase to standardize comparison
+        if val_lower not in accepted_phases:
+            return f"'{val}' (Excel Cell {cell_location}) is not a valid full phase. Please check for typos or reexamine the list of accepted phases on the GitHub Wiki."
+    return None
+
+
+def validate_phase_list(val, cell_location):
+    """
+    Validates a list of chemical phase abbreviations against a list of accepted phases,
+    returning an error message if any part of the list does not match the accepted phases.
+
+    Parameters:
+        val: The string containing the phase abbreviations, separated by commas or plus signs.
+        cell_location (str): The Excel cell location of the value for logging purposes.
+
+    Returns:
+        str: An error message if any abbreviation is invalid, None otherwise.
+    """
+
+    # Fetch the list of accepted phases
+    df = phase_scrape(link="../data/pylepr_phases.html")
+    accepted_phases = df["Abbreviation"].str.lower().tolist()
+
+    # Standardize the value to lowercase and split by ',' or '+'
+    if isinstance(val, str):
+        # Split the value using a regex to handle multiple delimiters
+        phases = re.split(r'[+,;]', val.lower())
+        phases = [phase.strip() for phase in phases]  # Strip whitespace from each part
+
+        # Check each part against the list of accepted phases
+        invalid_phases = [phase for phase in phases if phase not in accepted_phases]
+        if invalid_phases:
+            invalid_list = ", ".join(invalid_phases)
+            return f"Invalid phases detected (Excel Cell {cell_location}): {invalid_list}. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki."
+
+    return None
 
 # %%
