@@ -1,29 +1,20 @@
 
 STARTING VALIDATION FOR SHEET '2 Experiments'
 
----> ERROR (validate_required_fields): Missing value found at D7. Please provide a value for 'DATABASE TYPE'.
 ---> ERROR (validate_required_fields): Missing value found at I7. Please provide a value for 'PRESSURE'.
 
 STARTING VALIDATION FOR SHEET '3 Bulk (Starting Materials)'
 
----> WARNING (validate_chem_error_columns): 'Al2O3_err' or 'Al2O3error' missing from chemistry data columns.
----> WARNING (validate_chem_error_columns): 'MgO_err' or 'MgOerror' missing from chemistry data columns.
 ---> CRITICAL (validate_chem_units): 'TiO2_err' (Excel Column K) does not provide any units.
----> ERROR (validate_required_fields): Missing value found at F7. Please provide a value for 'CALCULATED AVERAGE'.
 
 STARTING VALIDATION FOR SHEET '4 Bulk (Run Products)'
 
----> WARNING (validate_chem_error_columns): 'opx_err' or 'opxerror' missing from chemistry data columns.
----> WARNING (validate_chem_error_columns): 'liq_err' or 'liqerror' missing from chemistry data columns.
 ---> ERROR (validate_required_fields): Missing value found at D12. Please provide a value for 'CALCULATED AVERAGE'.
 ---> ERROR (validate_required_fields): Missing value found at D13. Please provide a value for 'CALCULATED AVERAGE'.
 ---> ERROR (validate_required_fields): Missing value found at D14. Please provide a value for 'CALCULATED AVERAGE'.
 ---> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B10): l, o, k. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
----> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B12): o, op. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
 ---> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B13): liquid, olivine. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
----> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B14): liquid, orthopyroxene. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
----> WARNING (validate_value): '<1' (Excel Cell F8) contains a symbol.
----> WARNING (validate_value): '>3' (Excel Cell G10) contains a symbol.
+---> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B14): liquid. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
 
 STARTING VALIDATION FOR SHEET '5 Device Metadata'
 
@@ -32,26 +23,18 @@ STARTING VALIDATION FOR SHEET '5 Device Metadata'
 
 STARTING VALIDATION FOR SHEET '6 Data'
 
----> ERROR (validate_column_names): Column 'FeO*' (Excel Column M) is not formatted correctly. Please replace with 'FeO'.
----> ERROR (validate_column_names): Column 'FeOtot' (Excel Column O) is not formatted correctly. Please replace with 'FeO'.
----> ERROR (validate_column_names): Column 'Fe2O3total' (Excel Column U) is not formatted correctly. Please replace with 'Fe2O3'.
----> WARNING (validate_column_names): Column 'Total' (Excel Column W) detected. Please ensure this is the volatile-free total.
----> WARNING (validate_chem_error_columns): 'FeO_err' or 'FeOerror' missing from chemistry data columns.
----> WARNING (validate_chem_error_columns): 'Total_err' or 'Totalerror' missing from chemistry data columns.
+---> ERROR (validate_column_names): Column 'FeO*' (Excel Column N) is not formatted correctly. Please replace with 'FeO'.
+---> WARNING (validate_column_names): Column 'Total' (Excel Column Q) detected. Please ensure this is the volatile-free total.
+---> WARNING (validate_chem_error_columns): 'Fe2O3_err' or 'Fe2O3error' missing from chemistry data columns.
 ---> ERROR (validate_required_fields): Missing value found at B8. Please provide a value for 'SPECIES'.
 ---> ERROR (validate_required_fields): Missing value found at F7. Please provide a value for 'CALCULATED AVERAGE'.
----> ERROR (validate_required_fields): Missing value found at F8. Please provide a value for 'CALCULATED AVERAGE'.
----> ERROR (validate_chem_phase_values): 'cpx' (Excel Cell B15) is not a valid full phase. Please check for typos or reexamine the list of accepted phases on the GitHub Wiki.
 ---> ERROR (validate_chem_phase_values): '(1)' (Excel Cell I7) is not valid. Please provide an absolute uncertainty.
----> ERROR (validate_chem_phase_values): 0 in (Excel Cell I9) is not valid. Use 'bdl' for below detection limit values and leave cell blank if not measured.
 ---> ERROR (validate_chem_phase_values): 'n.d.' (Excel Cell I10) is not valid. Use 'bdl' if below detection limit.
----> ERROR (validate_chem_phase_values): 'N.D' (Excel Cell I11) is not valid. Use 'bdl' if below detection limit.
----> ERROR (validate_chem_phase_values): '≌' (Excel Cell I12) is not valid. Remove ≌.
----> WARNING (validate_value): '≤0.3' (Excel Cell I14) contains a symbol.
----> WARNING (validate_value): '<0.7' (Excel Cell J10) contains a symbol.
+---> ERROR (validate_chem_phase_values): '≤0.3' (Excel Cell I14) is not valid. Replace '≤' with '<='.
+---> ERROR (validate_chem_phase_values): '≌' (Excel Cell I15) is not valid. Remove ≌.
 ---> ERROR (validate_chem_phase_values): 'nd' (Excel Cell J11) is not valid. Use 'bdl' if below detection limit.
----> WARNING (validate_value): '<abc' (Excel Cell K7) contains a symbol.
----> ERROR (validate_chem_phase_values): '<abc' (Excel Cell K7) is not valid, as it is not numeric.
+---> ERROR (validate_chem_phase_values): '-' in (Excel Cell J12) is not valid. Leave cell blank if not measured.
+---> ERROR (validate_chem_phase_values): '<abc' (Excel Cell K7) is not valid. The part after '<' must be numeric.
 
 STARTING VALIDATION FOR SHEET '7 Primary Method Metadata' and '8 Method-Specific Metadata'
 

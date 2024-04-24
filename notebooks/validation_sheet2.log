@@ -1,2 +1,1 @@
----> ERROR (validate_required_fields): Missing value found at D7. Please provide a value for 'DATABASE TYPE'.
 ---> ERROR (validate_required_fields): Missing value found at I7. Please provide a value for 'PRESSURE'.

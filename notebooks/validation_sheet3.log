@@ -1,4 +1,1 @@
----> WARNING (validate_chem_error_columns): 'Al2O3_err' or 'Al2O3error' missing from chemistry data columns.
----> WARNING (validate_chem_error_columns): 'MgO_err' or 'MgOerror' missing from chemistry data columns.
 ---> CRITICAL (validate_chem_units): 'TiO2_err' (Excel Column K) does not provide any units.
----> ERROR (validate_required_fields): Missing value found at F7. Please provide a value for 'CALCULATED AVERAGE'.

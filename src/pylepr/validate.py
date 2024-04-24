@@ -342,63 +342,101 @@ def validate_chem_phase_values(chem_data, start_row):
         print(f"An error occurred during chemical data validation: {e}")
 
 
+# def validate_value(val, cell_location):
+#     """
+#     Validates a single chemical value, returning an appropriate error message if issues are found.
+
+#     Parameters:
+#         val: The value to validate.
+#         cell_location (str): The Excel cell location of the value for logging purposes.
+
+#     Returns:
+#         str: An error message if the value is invalid, None otherwise.
+#     """
+
+#     if isinstance(val, str):
+#         val_lower = val.lower()
+
+#         if "(" in val_lower or ")" in val_lower:
+#             return f"'{val}' (Excel Cell {cell_location}) is not valid. Please provide an absolute uncertainty."
+
+#         # Checking for symbols indicating limits and their correctness
+#         if val_lower.startswith((">", "<", "≤", "≥")):
+#             # Log initial detection of symbol
+#             initial_message = f"'{val}' (Excel Cell {cell_location}) contains a symbol."
+#             logging.warning(initial_message)
+
+#             # Check numeric validity of the part after the symbol
+#             numeric_part = val[1:].strip()
+#             if not numeric_part.replace(".", "", 1).isdigit():
+#                 return f"'{val}' (Excel Cell {cell_location}) is not valid, as it is not numeric."
+#             else:
+#                 return None  # If valid, no further checks are needed
+
+#     if isinstance(
+#         val, str
+#     ):  # Check if the value is a string to handle string-specific validations
+#         val_lower = val.lower()  # Convert value to lowercase to standardize checks
+#         # Check for non-detects and placeholder values
+#         if val_lower in ["nd", "n.d.", "n.d"]:
+#             return f"'{val}' (Excel Cell {cell_location}) is not valid. Use 'bdl' if below detection limit."
+#         # Check for and validate symbols indicating limits
+#         elif val_lower.startswith("≤"):
+#             return f"'{val}' (Excel Cell {cell_location}) is not valid. Replace '≤' with '<='."
+#         elif val_lower.startswith("≥"):
+#             return f"'{val}' (Excel Cell {cell_location}) is not valid. Replace '≥' with '>='."
+#         elif any(val_lower.startswith(sym) for sym in [">", "<", ">=", "<="]):
+#             # Validate the numeric part after the symbol
+#             numeric_part = val[1:].strip()
+#             if not numeric_part.replace(".", "", 1).isdigit():
+#                 return f"'{val}' (Excel Cell {cell_location}) is not valid. The part after '{val[0]}' must be numeric."
+#         elif "≌" in val_lower:
+#             return f"'{val}' (Excel Cell {cell_location}) is not valid. Remove ≌."
+#     # Handling for placeholders indicating no measurement
+#     elif val == "-":
+#         return f"'-' in (Excel Cell {cell_location}) is not valid. Leave cell blank if not measured."
+#     # Handling zero with specific instructions
+#     elif val == 0:
+#         return f"0 in (Excel Cell {cell_location}) is not valid. Use 'bdl' for below detection limit values and leave cell blank if not measured."
+#     return None
+
+
+def validate_symbol(val, cell_location):
+    """Validates the symbol and numeric part of the given value."""
+    symbol_mapping = {'≤': '<=', '≥': '>='}
+    if val[0] in symbol_mapping:
+        return f"'{val}' (Excel Cell {cell_location}) is not valid. Replace '{val[0]}' with '{symbol_mapping[val[0]]}'."
+
+    if val[0] in "<>":
+        numeric_part = val[1:].strip()
+        if not numeric_part.replace(".", "", 1).isdigit():
+            return f"'{val}' (Excel Cell {cell_location}) is not valid. The part after '{val[0]}' must be numeric."
+
+
 def validate_value(val, cell_location):
-    """
-    Validates a single chemical value, returning an appropriate error message if issues are found.
-
-    Parameters:
-        val: The value to validate.
-        cell_location (str): The Excel cell location of the value for logging purposes.
-
-    Returns:
-        str: An error message if the value is invalid, None otherwise.
-    """
-
     if isinstance(val, str):
         val_lower = val.lower()
 
         if "(" in val_lower or ")" in val_lower:
             return f"'{val}' (Excel Cell {cell_location}) is not valid. Please provide an absolute uncertainty."
 
-        # Checking for symbols indicating limits and their correctness
-        if val_lower.startswith((">", "<", "≤", "≥")):
-            # Log initial detection of symbol
-            initial_message = f"'{val}' (Excel Cell {cell_location}) contains a symbol."
-            logging.warning(initial_message)
-
-            # Check numeric validity of the part after the symbol
-            numeric_part = val[1:].strip()
-            if not numeric_part.replace(".", "", 1).isdigit():
-                return f"'{val}' (Excel Cell {cell_location}) is not valid, as it is not numeric."
-            else:
-                return None  # If valid, no further checks are needed
-
-    if isinstance(
-        val, str
-    ):  # Check if the value is a string to handle string-specific validations
-        val_lower = val.lower()  # Convert value to lowercase to standardize checks
-        # Check for non-detects and placeholder values
         if val_lower in ["nd", "n.d.", "n.d"]:
             return f"'{val}' (Excel Cell {cell_location}) is not valid. Use 'bdl' if below detection limit."
-        # Check for and validate symbols indicating limits
-        elif val_lower.startswith("≤"):
-            return f"'{val}' (Excel Cell {cell_location}) is not valid. Replace '≤' with '<='."
-        elif val_lower.startswith("≥"):
-            return f"'{val}' (Excel Cell {cell_location}) is not valid. Replace '≥' with '>='."
-        elif any(val_lower.startswith(sym) for sym in [">", "<", ">=", "<="]):
-            # Validate the numeric part after the symbol
-            numeric_part = val[1:].strip()
-            if not numeric_part.replace(".", "", 1).isdigit():
-                return f"'{val}' (Excel Cell {cell_location}) is not valid. The part after '{val[0]}' must be numeric."
-        elif "≌" in val_lower:
+
+        if val_lower == "-":
+            return f"'-' in (Excel Cell {cell_location}) is not valid. Leave cell blank if not measured."
+
+        if val_lower == "0":
+            return f"0 in (Excel Cell {cell_location}) is not valid. Use 'bdl' for below detection limit values and leave cell blank if not measured."
+
+        if "≌" in val_lower:
             return f"'{val}' (Excel Cell {cell_location}) is not valid. Remove ≌."
-    # Handling for placeholders indicating no measurement
-    elif val == "-":
-        return f"'-' in (Excel Cell {cell_location}) is not valid. Leave cell blank if not measured."
-    # Handling zero with specific instructions
-    elif val == 0:
-        return f"0 in (Excel Cell {cell_location}) is not valid. Use 'bdl' for below detection limit values and leave cell blank if not measured."
-    return None
+
+        # Symbol-based validation
+        symbol_error = validate_symbol(val, cell_location)
+        if symbol_error:
+            return symbol_error
+        
 
 
 def validate_full_phase(val, cell_location):
