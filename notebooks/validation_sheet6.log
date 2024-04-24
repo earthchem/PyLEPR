@@ -1,18 +1,20 @@
---> ERROR (validate_column_names): Column 'FeO*' (Excel Column M) is not formatted correctly. Please replace with 'FeO'.
---> ERROR (validate_column_names): Column 'FeOtot' (Excel Column O) is not formatted correctly. Please replace with 'FeO'.
---> ERROR (validate_column_names): Column 'Fe2O3total' (Excel Column U) is not formatted correctly. Please replace with 'Fe2O3'.
---> WARNING (validate_column_names): Column 'Total' (Excel Column W) detected. Please ensure this is the volatile-free total.
---> WARNING (validate_chem_error_columns): 'FeO_err' or 'FeOerror' missing from chemistry data columns.
---> WARNING (validate_chem_error_columns): 'Total_err' or 'Totalerror' missing from chemistry data columns.
---> ERROR (validate_chemical_values): 'cpx' (Excel Cell B15) is not a valid full phase. Please check for typos or reexamine the list of accepted phases on the GitHub Wiki.
---> ERROR (validate_chemical_values): 'opx' (Excel Cell B16) is not a valid full phase. Please check for typos or reexamine the list of accepted phases on the GitHub Wiki.
---> ERROR (validate_chemical_values): 0 in (Excel Cell J9) is not valid. Use 'bdl' for below detection limit values and leave cell blank if not measured.
---> ERROR (validate_chemical_values): 'n.d.' (Excel Cell J10) is not valid. Use 'bdl' if below detection limit.
---> ERROR (validate_chemical_values): 'N.D' (Excel Cell J11) is not valid. Use 'bdl' if below detection limit.
---> ERROR (validate_chemical_values): '≌' (Excel Cell J12) is not valid. Remove ≌.
---> WARNING (validate_value): '≤0.3' (Excel Cell J14) contains a symbol.
---> ERROR (validate_chemical_values): 0 in (Excel Cell K9) is not valid. Use 'bdl' for below detection limit values and leave cell blank if not measured.
---> WARNING (validate_value): '<0.7' (Excel Cell K10) contains a symbol.
---> ERROR (validate_chemical_values): 'nd' (Excel Cell K11) is not valid. Use 'bdl' if below detection limit.
---> WARNING (validate_value): '<abc' (Excel Cell L7) contains a symbol.
---> ERROR (validate_chemical_values): '<abc' (Excel Cell L7) is not valid, as it is not numeric.
+---> ERROR (validate_column_names): Column 'FeO*' (Excel Column M) is not formatted correctly. Please replace with 'FeO'.
+---> ERROR (validate_column_names): Column 'FeOtot' (Excel Column O) is not formatted correctly. Please replace with 'FeO'.
+---> ERROR (validate_column_names): Column 'Fe2O3total' (Excel Column U) is not formatted correctly. Please replace with 'Fe2O3'.
+---> WARNING (validate_column_names): Column 'Total' (Excel Column W) detected. Please ensure this is the volatile-free total.
+---> WARNING (validate_chem_error_columns): 'FeO_err' or 'FeOerror' missing from chemistry data columns.
+---> WARNING (validate_chem_error_columns): 'Total_err' or 'Totalerror' missing from chemistry data columns.
+---> ERROR (validate_required_fields): Missing value found at B8. Please provide a value for 'SPECIES'.
+---> ERROR (validate_required_fields): Missing value found at F7. Please provide a value for 'CALCULATED AVERAGE'.
+---> ERROR (validate_required_fields): Missing value found at F8. Please provide a value for 'CALCULATED AVERAGE'.
+---> ERROR (validate_chem_phase_values): 'cpx' (Excel Cell B15) is not a valid full phase. Please check for typos or reexamine the list of accepted phases on the GitHub Wiki.
+---> ERROR (validate_chem_phase_values): '(1)' (Excel Cell I7) is not valid. Please provide an absolute uncertainty.
+---> ERROR (validate_chem_phase_values): 0 in (Excel Cell I9) is not valid. Use 'bdl' for below detection limit values and leave cell blank if not measured.
+---> ERROR (validate_chem_phase_values): 'n.d.' (Excel Cell I10) is not valid. Use 'bdl' if below detection limit.
+---> ERROR (validate_chem_phase_values): 'N.D' (Excel Cell I11) is not valid. Use 'bdl' if below detection limit.
+---> ERROR (validate_chem_phase_values): '≌' (Excel Cell I12) is not valid. Remove ≌.
+---> WARNING (validate_value): '≤0.3' (Excel Cell I14) contains a symbol.
+---> WARNING (validate_value): '<0.7' (Excel Cell J10) contains a symbol.
+---> ERROR (validate_chem_phase_values): 'nd' (Excel Cell J11) is not valid. Use 'bdl' if below detection limit.
+---> WARNING (validate_value): '<abc' (Excel Cell K7) contains a symbol.
+---> ERROR (validate_chem_phase_values): '<abc' (Excel Cell K7) is not valid, as it is not numeric.

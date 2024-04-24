@@ -1,0 +1,11 @@
+---> WARNING (validate_chem_error_columns): 'opx_err' or 'opxerror' missing from chemistry data columns.
+---> WARNING (validate_chem_error_columns): 'liq_err' or 'liqerror' missing from chemistry data columns.
+---> ERROR (validate_required_fields): Missing value found at D12. Please provide a value for 'CALCULATED AVERAGE'.
+---> ERROR (validate_required_fields): Missing value found at D13. Please provide a value for 'CALCULATED AVERAGE'.
+---> ERROR (validate_required_fields): Missing value found at D14. Please provide a value for 'CALCULATED AVERAGE'.
+---> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B10): l, o, k. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
+---> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B12): o, op. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
+---> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B13): liquid, olivine. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
+---> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B14): liquid, orthopyroxene. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
+---> WARNING (validate_value): '<1' (Excel Cell F8) contains a symbol.
+---> WARNING (validate_value): '>3' (Excel Cell G10) contains a symbol.

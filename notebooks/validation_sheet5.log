@@ -1,0 +1,2 @@
+---> ERROR (validate_device_codes): Unique DEVICE codes ['4'] in Sheet '2 Experiments' not found in Sheet '5 Device Metadata'.
+---> ERROR (validate_device_codes): Unique DEVICE codes ['etc.'] in Sheet '5 Device Metadata' not found in Sheet '2 Experiments'.

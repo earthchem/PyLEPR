@@ -1,7 +1,10 @@
 # %%
 
+import os
 import re
+import sys
 import logging
+import numpy as np
 import pandas as pd
 from bs4 import BeautifulSoup
 
@@ -10,17 +13,35 @@ from bs4 import BeautifulSoup
 
 def begin_logging(log_filename):
     """
-    Set up logging configuration.
-
-    Parameters:
-        log_filename (str): The name of the log file.
+    Set up logging configuration to capture all logs with distinct formatting for INFO logs.
+    Each log level will have a specific formatter to distinguish INFO logs by formatting them without arrows.
     """
-    logging.basicConfig(
-        filename=log_filename,
-        filemode="w",
-        format="--> %(levelname)s (%(funcName)s): %(message)s",
-        force=True,
-    )
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)  # Set to capture all levels of logs
+
+    # Remove all existing handlers associated with the logger.
+    logger.handlers = [h for h in logger.handlers if not isinstance(h, logging.FileHandler)]
+
+    # Create a single file handler for all log messages
+    file_handler = logging.FileHandler(log_filename, mode='w')
+    file_handler.setLevel(logging.DEBUG)  # This handler captures all levels of logs
+
+    # Define a method to differentiate formatting based on log level
+    def format(record):
+        if record.levelno == logging.INFO:
+            return f"{record.getMessage()}"
+        else:
+            return f"---> {record.levelname} ({record.funcName}): {record.getMessage()}"
+
+    # Set a custom formatter using the format function
+    file_handler.setFormatter(logging.Formatter('%(message)s'))
+    file_handler.addFilter(lambda record: (format(record), setattr(record, 'msg', format(record)))[0])
+
+    # Add the file handler to the logger
+    logger.addHandler(file_handler)
+    logger.propagate = False
+
+    return logger
 
 
 def print_log_file(log_filename):
@@ -42,11 +63,12 @@ def print_log_file(log_filename):
 def idx_to_col(idx):
     """
     Converts zero-indexed column number to Excel column label.
+    Correctly handles indices greater than 25 to account for Excel's labeling.
     """
     if idx < 26:
         return chr(65 + idx)
     else:
-        return idx_to_col((idx // 26) - 1) + idx_to_col(idx % 26)
+        return idx_to_col(idx // 26 - 1) + chr(65 + (idx % 26))
 
 
 def col_to_idx(col):
@@ -59,7 +81,7 @@ def col_to_idx(col):
     return index - 1
 
 
-def extract_chem_dat(upload_data, sheet, start_col, start_row):
+def extract_chem_data(upload_data, sheet, start_col, start_row):
     """
     Extracts and organizes chemical data from a specified sheet in the provided dataset.
 
@@ -70,31 +92,59 @@ def extract_chem_dat(upload_data, sheet, start_col, start_row):
         start_row (int): The row index where chemical data headers are located.
 
     Returns:
-        tuple: A tuple containing two DataFrames, (chem_dat, chem_dat_info):
-               - chem_dat: DataFrame with chemical data.
-               - chem_dat_info: DataFrame with metadata such as method IDs and units.
+        tuple: A tuple containing two DataFrames, (chem_data, chem_data_info):
+               - chem_data: DataFrame with chemical data.
+               - chem_data_info: DataFrame with metadata such as method IDs and units.
     """
 
     run_products = upload_data[sheet]
     column_names = run_products.iloc[start_row - 4]
-    run_products.columns = column_names
+    run_products.columns = column_names.values
 
     start_col_idx = col_to_idx(start_col)
-    run_names = run_products.iloc[start_row-2:, 0:2]
+    run_names = run_products.iloc[start_row - 2 :, 0 : col_to_idx(start_col)]
 
-    dat = run_products.iloc[:, start_col_idx:]
-    dat.columns = dat.iloc[0]
-    dat = dat.iloc[1:]
+    data = run_products.iloc[:, start_col_idx:]
+    data.columns = data.iloc[0]
+    data = data.iloc[1:]
 
-    chem_dat_info = dat.iloc[:2]
-    chem_dat_info.index = ["method_id", "unit"]
+    chem_data_info = data.iloc[:2]
+    chem_data_info.index = ["method_id", "unit"]
 
-    chem_dat = dat.iloc[start_row - 3 :]
-    chem_dat.index = run_names.iloc[:, 0]
+    chem_data = data.iloc[start_row - 3 :]
+    chem_data.index = run_names.iloc[:, 0]
 
-    chem_dat.insert(0, run_names.columns[1], run_names.iloc[:, 1].values)
+    for i in range(
+        1, run_names.shape[1]
+    ):  # Loop through columns, starting from the second column
+        chem_data.insert(i - 1, run_names.columns[i], run_names.iloc[:, i].values)
 
-    return chem_dat, chem_dat_info
+    return chem_data, chem_data_info
+
+
+def extract_data(upload_data, sheet, start_col, start_row):
+    """
+    Extracts and organizes data from a specified sheet in the provided dataset.
+
+    Parameters:
+        upload_data (dict): Contains DataFrames indexed by sheet names.
+        sheet (str): The name of the sheet to extract data from.
+        start_col (str): The column letter where data starts.
+        start_row (int): The row index where data headers are located.
+
+    Returns:
+        dat: Dataframe from the sheet with the first column as the index.
+    """
+
+    start_col_idx = col_to_idx(start_col)
+    run_products = upload_data[sheet]
+    column_names = run_products.iloc[start_row - 5, start_col_idx:]
+    run_products.columns = column_names.values
+
+    data = run_products.iloc[start_row - 2 :, :]
+    data = data.set_index(data.columns[0])
+
+    return data
 
 
 # %%
@@ -149,7 +199,7 @@ def phase_scrape(link="../data/pylepr_phases.html"):
 # %%
 
 
-def validate_column_names(chem_dat_info, start_col):
+def validate_column_names(chem_data_info, start_col):
     """
     Validates that column names in a DataFrame adhere to preferred naming conventions, ensures that totals are volatile-free.
     """
@@ -159,7 +209,7 @@ def validate_column_names(chem_dat_info, start_col):
         "Fe2O3": ["Fe2O3t", "Fe2O3tot", "Fe2O3total", "Fe2O3*"],
     }
 
-    for column in chem_dat_info.columns:
+    for column in chem_data_info.columns:
         correct_name = None
         for preferred, variations in preferred_formats.items():
             if column in variations:
@@ -168,7 +218,7 @@ def validate_column_names(chem_dat_info, start_col):
 
         if correct_name:
             excel_column = idx_to_col(
-                chem_dat_info.columns.get_loc(column) + col_to_idx(start_col)
+                chem_data_info.columns.get_loc(column) + col_to_idx(start_col)
             )
             logging.error(
                 f"Column '{column}' (Excel Column {excel_column}) is not formatted correctly. Please replace with '{correct_name}'."
@@ -176,7 +226,7 @@ def validate_column_names(chem_dat_info, start_col):
 
         if column == "Total" or column == "total":
             excel_column = idx_to_col(
-                chem_dat_info.columns.get_loc(column) + col_to_idx(start_col)
+                chem_data_info.columns.get_loc(column) + col_to_idx(start_col)
             )
             logging.warning(
                 f"Column '{column}' (Excel Column {excel_column}) detected. Please ensure this is the volatile-free total."
@@ -207,11 +257,11 @@ def validate_chem_error_columns(chem_dat_info):
             )
 
 
-def validate_chem_units(chem_dat_info, start_col):
+def validate_chem_units(chem_data_info, start_col):
     """
     Validates that each chemical data column has units specified.
     """
-    units = chem_dat_info.loc["unit"]
+    units = chem_data_info.loc["unit"]
     for idx, (col_name, unit) in enumerate(units.items(), start=col_to_idx(start_col)):
         if pd.isna(unit):
             excel_column = idx_to_col(idx)  # Calculate the Excel column letter
@@ -220,11 +270,11 @@ def validate_chem_units(chem_dat_info, start_col):
             )
 
 
-def validate_chem_method(chem_dat_info, start_col):
+def validate_chem_method(chem_data_info, start_col):
     """
     Validates that each chemical data column has units specified.
     """
-    methods = chem_dat_info.loc["method_id"]
+    methods = chem_data_info.loc["method_id"]
     for idx, (col_name, method) in enumerate(
         methods.items(), start=col_to_idx(start_col)
     ):
@@ -235,16 +285,16 @@ def validate_chem_method(chem_dat_info, start_col):
             )
 
 
-def validate_metadata(chem_dat_info, start_col):
+def validate_metadata(chem_data_info, start_col):
     """
     Executes all validation functions on the chem_dat_info.
     """
     try:
-        validate_column_names(chem_dat_info, start_col)
-        validate_chem_error_columns(chem_dat_info)
-        validate_chem_units(chem_dat_info, start_col)
-        validate_chem_method(chem_dat_info, start_col)
-        print("Metadata validation completed successfully.")
+        validate_column_names(chem_data_info, start_col)
+        validate_chem_error_columns(chem_data_info)
+        validate_chem_units(chem_data_info, start_col)
+        validate_chem_method(chem_data_info, start_col)
+        # print("Metadata validation completed successfully.")
     except Exception as e:
         logging.error(f"An error occurred during validation: {e}")
         print(f"An error occurred during validation: {e}")
@@ -253,35 +303,30 @@ def validate_metadata(chem_dat_info, start_col):
 # %%
 
 
-def validate_chemical_values(chem_dat, start_col, start_row):
+def validate_chem_phase_values(chem_data, start_row):
     """
     Validates chemical data values within a DataFrame, logging any formatting issues or non-numeric errors.
     The function will print and log a completion message after processing all entries.
 
     Parameters:
-        chem_dat (DataFrame): DataFrame containing the chemical data.
+        chem_data (DataFrame): DataFrame containing the chemical data.
         start_col (str): Column letter where chemical data starts (default).
         start_row (int): Row index where data entries begin (default).
     """
     try:
-        start_col_idx = col_to_idx(start_col)
-        for ichem_col, ichem_dat in chem_dat.T.iterrows():
-            chem = ichem_dat.name
-            column_index = chem_dat.columns.get_loc(chem) + start_col_idx
-            # Fix column B for 'SPECIES' and 'phase list', use calculated columns for others
-            if chem in ["SPECIES", "phase list"]:
-                excel_column = "B"
-            else:
-                excel_column = idx_to_col(column_index)  # Default behavior for other columns
+        validate_required_fields(chem_data, start_row)
 
-            for run_id, val in ichem_dat.items():
-                row_number = chem_dat.index.get_loc(run_id) + start_row
+        for ichem_col, ichem_data in chem_data.T.iterrows():
+            chem = ichem_data.name
+            excel_column = idx_to_col(chem_data.columns.get_loc(chem) + 1)
+
+            for run_id, val in ichem_data.items():
+                row_number = chem_data.index.get_loc(run_id) + start_row
                 cell_location = f"{excel_column}{row_number}"
-                # message = validate_value(val, cell_location)
 
                 if chem == "SPECIES":
                     message = validate_full_phase(val, cell_location)
-                elif chem == "phase list":
+                elif chem == "Phase List":
                     message = validate_phase_list(val, cell_location)
                 else:
                     message = validate_value(val, cell_location)
@@ -290,7 +335,7 @@ def validate_chemical_values(chem_dat, start_col, start_row):
                     logging.error(message)
                     continue  # Skip further checks if an error is already found
 
-        print("Chemical data validation completed successfully.")
+        # print("Chemical data validation completed successfully.")
 
     except Exception as e:
         logging.error(f"An error occurred during chemical data validation: {e}")
@@ -311,6 +356,10 @@ def validate_value(val, cell_location):
 
     if isinstance(val, str):
         val_lower = val.lower()
+
+        if "(" in val_lower or ")" in val_lower:
+            return f"'{val}' (Excel Cell {cell_location}) is not valid. Please provide an absolute uncertainty."
+
         # Checking for symbols indicating limits and their correctness
         if val_lower.startswith((">", "<", "≤", "≥")):
             # Log initial detection of symbol
@@ -394,7 +443,7 @@ def validate_phase_list(val, cell_location):
     # Standardize the value to lowercase and split by ',' or '+'
     if isinstance(val, str):
         # Split the value using a regex to handle multiple delimiters
-        phases = re.split(r'[+,;]', val.lower())
+        phases = re.split(r"[+,;]", val.lower())
         phases = [phase.strip() for phase in phases]  # Strip whitespace from each part
 
         # Check each part against the list of accepted phases
@@ -405,4 +454,150 @@ def validate_phase_list(val, cell_location):
 
     return None
 
+
 # %%
+
+
+# %%
+
+
+def validate_required_fields(chem_data, start_row):
+    """
+    Validates that required fields (in uppercase) in a DataFrame are fully populated.
+    Logs a warning if any required fields are missing, including specific cell locations.
+
+    Parameters:
+        chem_data (DataFrame): DataFrame containing the chemical data.
+        start_row (int): Row index where data headers are located (default to the top of the data section).
+    """
+
+    required_columns = [col for col in chem_data.columns if col.isupper()]
+
+    for col in required_columns:
+        if chem_data[col].isnull().any():
+            for i, is_null in enumerate(chem_data[col].isnull()):
+                if is_null:
+                    row_number = (
+                        i + start_row
+                    )  # Calculating actual row number in the sheet
+                    excel_column = idx_to_col(
+                        chem_data.columns.get_loc(col) + 1
+                    )  # Get Excel column
+                    cell_location = f"{excel_column}{row_number}"
+                    logging.error(
+                        f"Missing value found at {cell_location}. Please provide a value for '{col}'."
+                    )
+
+
+# %%
+
+
+def validate_device_codes(data_device, data_metadata):
+    """
+    Validates the consistency of 'DEVICE' codes between two data sources. It logs errors for any device codes
+    that are unique to either the device data or metadata, indicating mismatches between the two sets.
+
+    Parameters:
+        data_device (DataFrame): DataFrame containing the device data with a 'DEVICE' column.
+        data_metadata (DataFrame): DataFrame containing the metadata with device codes in the index.
+    """
+
+    unique_devices = np.unique(data_device["DEVICE"].astype(str))
+    unique_devices_metadata = np.unique(data_metadata.index.astype(str))
+
+    # Find unique in unique_devices not in unique_devices_metadata
+    unique_to_devices = np.setdiff1d(unique_devices, unique_devices_metadata)
+    if unique_to_devices.size > 0:
+        logging.error(
+            f"Unique DEVICE codes {unique_to_devices} in Sheet '2 Experiments' not found in Sheet '5 Device Metadata'."
+        )
+
+    # Find unique in unique_devices_metadata not in unique_devices
+    unique_to_metadata = np.setdiff1d(unique_devices_metadata, unique_devices)
+    if unique_to_metadata.size > 0:
+        logging.error(
+            f"Unique DEVICE codes {unique_to_metadata} in Sheet '5 Device Metadata' not found in Sheet '2 Experiments'."
+        )
+
+
+def validate_method_codes(
+    starting_materials, run_products, data, primary_methods, secondary_methods
+):
+    unique_data_methods = np.unique(
+        np.concatenate(
+            [
+                starting_materials.loc["method_id"].values.astype(str),
+                run_products.loc["method_id"].values.astype(str),
+                data.loc["method_id"].values.astype(str),
+            ]
+        )
+    )
+
+    unique_methods = np.unique(
+        np.concatenate(
+            [primary_methods.index.astype(str), secondary_methods.index.astype(str)]
+        )
+    )
+
+    unique_to_data_methods = np.setdiff1d(unique_data_methods, unique_methods)
+    if unique_to_data_methods.size > 0:
+        logging.error(
+            f"Unique METHOD CODE {unique_to_data_methods} in Sheets '3 Bulk (Starting Materials), 4 Bulk (Run Products), or 6 Data' not found in Sheets '7 Primary Method Metadata or 8 Method-Specific Metadata'."
+        )
+
+    unique_to_methods = np.setdiff1d(unique_methods, unique_data_methods)
+    if unique_to_methods.size > 0:
+        logging.error(
+            f"Unique METHOD CODE {unique_to_methods} in Sheets '7 Primary Method Metadata or 8 Method-Specific Metadata' not found in Sheets '3 Bulk (Starting Materials), 4 Bulk (Run Products), or 6 Data'."
+        )
+
+
+# %% 
+
+
+def validate_all(upload_data, log_filename):
+
+    """
+    Validates various data sheets within an uploaded data workbook and logs the validation process.
+
+    Parameters:
+        upload_data (object): The workbook object containing the data to be validated.
+        log_filename (str): The path and name of the log file where the validation process details will be recorded.
+
+    Description:
+        This function initializes the logging configuration, extracts and validates data from specific sheets within the provided workbook. It logs the start and completion of validation for each sheet, ensuring that all necessary validations are performed and recorded sequentially for '2 Experiments', '3 Bulk (Starting Materials)', '4 Bulk (Run Products)', '5 Device Metadata', '6 Data', '7 Primary Method Metadata', and '8 Method-Specific Metadata'.
+    """
+
+    begin_logging(log_filename)
+
+    dat_2 = extract_data(upload_data, sheet='2 Experiments', start_col='A', start_row=7)
+    chem_data_3, chem_data_info_3 = extract_chem_data(upload_data, sheet='3 Bulk (Starting Materials)', start_col='H', start_row=7)
+    chem_data_4, chem_data_info_4 = extract_chem_data(upload_data, sheet='4 Bulk (Run Products)', start_col='F', start_row=7)
+    dat_5 = extract_data(upload_data, sheet='5 Device Metadata', start_col='A', start_row=7)
+    chem_data_6, chem_data_info_6 = extract_chem_data(upload_data, sheet='6 Data', start_col='H', start_row=7)
+    dat_7 = extract_data(upload_data, sheet='7 Primary Method Metadata', start_col='A', start_row=7)
+    dat_8 = extract_data(upload_data, sheet='8 Method-Specific Metadata', start_col='A', start_row=7)
+
+    logging.info("\nSTARTING VALIDATION FOR SHEET '2 Experiments'\n")
+    validate_required_fields(dat_2, start_row=7)
+
+    logging.info("\nSTARTING VALIDATION FOR SHEET '3 Bulk (Starting Materials)'\n")
+    validate_metadata(chem_data_info_3, start_col='H')
+    validate_chem_phase_values(chem_data_3, start_row=7)
+
+    logging.info("\nSTARTING VALIDATION FOR SHEET '4 Bulk (Run Products)'\n")
+    validate_metadata(chem_data_info_4, start_col='F')
+    validate_chem_phase_values(chem_data_4, start_row=7)
+
+    logging.info("\nSTARTING VALIDATION FOR SHEET '5 Device Metadata'\n")
+    validate_device_codes(dat_2, dat_5)
+
+    logging.info("\nSTARTING VALIDATION FOR SHEET '6 Data'\n")
+    validate_metadata(chem_data_info_6, start_col='H')
+    validate_chem_phase_values(chem_data_6, start_row=7)
+
+    logging.info("\nSTARTING VALIDATION FOR SHEET '7 Primary Method Metadata' and '8 Method-Specific Metadata'\n")
+    validate_method_codes(chem_data_info_3, chem_data_info_4, chem_data_info_6, dat_7, dat_8)
+
+    logging.info("\nVALIDATION COMPLETE FOR ALL SHEETS\n")
+
