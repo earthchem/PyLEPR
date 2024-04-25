@@ -1,8 +1,10 @@
 ---> ERROR (validate_column_names): Column 'FeO*' (Excel Column N) is not formatted correctly. Please replace with 'FeO'.
 ---> WARNING (validate_column_names): Column 'Total' (Excel Column Q) detected. Please ensure this is the volatile-free total.
 ---> WARNING (validate_chem_error_columns): 'Fe2O3_err' or 'Fe2O3error' missing from chemistry data columns.
----> ERROR (validate_required_fields): Missing value found at B8. Please provide a value for 'SPECIES'.
----> ERROR (validate_required_fields): Missing value found at F7. Please provide a value for 'CALCULATED AVERAGE'.
+---> CRITICAL (validate_chem_units): 'SiO2' (Excel Column H) does not provide any units.
+---> WARNING (validate_units): 'wt.%' (Excel Column I) does not match any accepted units. Please check for typos or reexamine the list on the GitHub Wiki.
+---> ERROR (validate_required_fields): Missing value found at Excel Cell B8. Please provide a value for 'SPECIES'.
+---> ERROR (validate_required_fields): Missing value found at Excel Cell F7. Please provide a value for 'CALCULATED AVERAGE'.
 ---> ERROR (validate_chem_phase_values): '(1)' (Excel Cell I7) is not valid. Please provide an absolute uncertainty.
 ---> ERROR (validate_chem_phase_values): 'n.d.' (Excel Cell I10) is not valid. Use 'bdl' if below detection limit.
 ---> ERROR (validate_chem_phase_values): '≤0.3' (Excel Cell I14) is not valid. Replace '≤' with '<='.

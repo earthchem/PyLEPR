@@ -1,6 +1,3 @@
----> ERROR (validate_required_fields): Missing value found at D12. Please provide a value for 'CALCULATED AVERAGE'.
----> ERROR (validate_required_fields): Missing value found at D13. Please provide a value for 'CALCULATED AVERAGE'.
----> ERROR (validate_required_fields): Missing value found at D14. Please provide a value for 'CALCULATED AVERAGE'.
----> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B10): l, o, k. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
----> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B13): liquid, olivine. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
----> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B14): liquid. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
+---> ERROR (validate_required_fields): Missing value found at Excel Cell D14. Please provide a value for 'CALCULATED AVERAGE'.
+---> ERROR (validate_chem_phase_values): 'l, o, k' (Excel Cell B10) contains invalid phase abbreviations. Please check for typos or reexamine the list on the GitHub Wiki.
+---> ERROR (validate_chem_phase_values): 'liquid, olivine' (Excel Cell B13) contains invalid phase abbreviations. Please check for typos or reexamine the list on the GitHub Wiki.

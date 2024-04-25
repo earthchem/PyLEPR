@@ -1,7 +1,8 @@
 
 STARTING VALIDATION FOR SHEET '2 Experiments'
 
----> ERROR (validate_required_fields): Missing value found at I7. Please provide a value for 'PRESSURE'.
+---> ERROR (validate_required_fields): Missing value found at Excel Cell I7. Please provide a value for 'PRESSURE'.
+---> WARNING (validate_buffer): 'NO' (Excel Cell K9) does not match any accepted buffers. Please check for typos or reexamine the list on the GitHub Wiki.
 
 STARTING VALIDATION FOR SHEET '3 Bulk (Starting Materials)'
 
@@ -9,12 +10,9 @@ STARTING VALIDATION FOR SHEET '3 Bulk (Starting Materials)'
 
 STARTING VALIDATION FOR SHEET '4 Bulk (Run Products)'
 
----> ERROR (validate_required_fields): Missing value found at D12. Please provide a value for 'CALCULATED AVERAGE'.
----> ERROR (validate_required_fields): Missing value found at D13. Please provide a value for 'CALCULATED AVERAGE'.
----> ERROR (validate_required_fields): Missing value found at D14. Please provide a value for 'CALCULATED AVERAGE'.
----> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B10): l, o, k. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
----> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B13): liquid, olivine. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
----> ERROR (validate_chem_phase_values): Invalid phases detected (Excel Cell B14): liquid. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki.
+---> ERROR (validate_required_fields): Missing value found at Excel Cell D14. Please provide a value for 'CALCULATED AVERAGE'.
+---> ERROR (validate_chem_phase_values): 'l, o, k' (Excel Cell B10) contains invalid phase abbreviations. Please check for typos or reexamine the list on the GitHub Wiki.
+---> ERROR (validate_chem_phase_values): 'liquid, olivine' (Excel Cell B13) contains invalid phase abbreviations. Please check for typos or reexamine the list on the GitHub Wiki.
 
 STARTING VALIDATION FOR SHEET '5 Device Metadata'
 
@@ -26,8 +24,10 @@ STARTING VALIDATION FOR SHEET '6 Data'
 ---> ERROR (validate_column_names): Column 'FeO*' (Excel Column N) is not formatted correctly. Please replace with 'FeO'.
 ---> WARNING (validate_column_names): Column 'Total' (Excel Column Q) detected. Please ensure this is the volatile-free total.
 ---> WARNING (validate_chem_error_columns): 'Fe2O3_err' or 'Fe2O3error' missing from chemistry data columns.
----> ERROR (validate_required_fields): Missing value found at B8. Please provide a value for 'SPECIES'.
----> ERROR (validate_required_fields): Missing value found at F7. Please provide a value for 'CALCULATED AVERAGE'.
+---> CRITICAL (validate_chem_units): 'SiO2' (Excel Column H) does not provide any units.
+---> WARNING (validate_units): 'wt.%' (Excel Column I) does not match any accepted units. Please check for typos or reexamine the list on the GitHub Wiki.
+---> ERROR (validate_required_fields): Missing value found at Excel Cell B8. Please provide a value for 'SPECIES'.
+---> ERROR (validate_required_fields): Missing value found at Excel Cell F7. Please provide a value for 'CALCULATED AVERAGE'.
 ---> ERROR (validate_chem_phase_values): '(1)' (Excel Cell I7) is not valid. Please provide an absolute uncertainty.
 ---> ERROR (validate_chem_phase_values): 'n.d.' (Excel Cell I10) is not valid. Use 'bdl' if below detection limit.
 ---> ERROR (validate_chem_phase_values): '≤0.3' (Excel Cell I14) is not valid. Replace '≤' with '<='.
@@ -39,6 +39,8 @@ STARTING VALIDATION FOR SHEET '6 Data'
 STARTING VALIDATION FOR SHEET '7 Primary Method Metadata' and '8 Method-Specific Metadata'
 
 ---> ERROR (validate_method_codes): Unique METHOD CODE ['5'] in Sheets '3 Bulk (Starting Materials), 4 Bulk (Run Products), or 6 Data' not found in Sheets '7 Primary Method Metadata or 8 Method-Specific Metadata'.
+---> WARNING (validate_methods): 'EMPA' (Excel Cell D9) does not match any accepted techniques. Please check for typos or reexamine the list on the GitHub Wiki.
+---> WARNING (validate_methods): 'xyz' (Excel Cell D10) does not match any accepted techniques. Please check for typos or reexamine the list on the GitHub Wiki.
 
 VALIDATION COMPLETE FOR ALL SHEETS
 

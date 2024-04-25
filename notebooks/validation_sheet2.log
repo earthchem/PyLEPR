@@ -1,1 +1,2 @@
----> ERROR (validate_required_fields): Missing value found at I7. Please provide a value for 'PRESSURE'.
+---> ERROR (validate_required_fields): Missing value found at Excel Cell I7. Please provide a value for 'PRESSURE'.
+---> WARNING (validate_buffer): 'NO' (Excel Cell K9) does not match any accepted buffers. Please check for typos or reexamine the list on the GitHub Wiki.

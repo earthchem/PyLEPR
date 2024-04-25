@@ -150,13 +150,12 @@ def extract_data(upload_data, sheet, start_col, start_row):
 # %%
 
 
-def phase_scrape(link="../data/pylepr_phases.html"):
+def phase_scrape(link):
     """
     Extracts data from the phase table within an HTML file and converts it to a DataFrame.
 
     Parameters:
         link (str): The file path or link to the HTML file to be scraped.
-                    Default is '../data/pylepr_phases.html'.
 
     Returns:
         pandas.DataFrame: A DataFrame containing the extracted table data, where each row represents
@@ -285,6 +284,34 @@ def validate_chem_method(chem_data_info, start_col):
             )
 
 
+def validate_units(chem_data_info, start_col):
+    """
+    Validates that the units in a DataFrame match an accepted list of units.
+    Logs a warning if any unit values do not match and skips NaN values.
+
+    Parameters:
+        data (DataFrame): DataFrame containing the unit data.
+        start_col (str): Excel column where data headers start.
+    """
+
+    # Scrape the accepted units
+    df = phase_scrape(link="../data/units.html")
+    accepted_units = df["name"].str.lower().tolist()
+
+    # Ensure there is a row labeled 'unit'
+    if 'unit' in chem_data_info.index:
+        unit_values = chem_data_info.loc['unit'].values  # Extract unit values from the row
+        for i, unit in enumerate(unit_values):
+            if pd.isna(unit):  # Skip NaN values
+                continue
+            unit_str = str(unit).lower()  # Convert to lowercase for case-insensitive comparison
+            if unit_str not in accepted_units:
+                excel_column = idx_to_col(i + col_to_idx(start_col))  # Convert column index to Excel label with offset
+                logging.warning(
+                    f"'{unit}' (Excel Column {excel_column}) does not match any accepted units. Please check for typos or reexamine the list on the GitHub Wiki."
+                )
+
+
 def validate_metadata(chem_data_info, start_col):
     """
     Executes all validation functions on the chem_dat_info.
@@ -294,6 +321,7 @@ def validate_metadata(chem_data_info, start_col):
         validate_chem_error_columns(chem_data_info)
         validate_chem_units(chem_data_info, start_col)
         validate_chem_method(chem_data_info, start_col)
+        validate_units(chem_data_info, start_col)
         # print("Metadata validation completed successfully.")
     except Exception as e:
         logging.error(f"An error occurred during validation: {e}")
@@ -340,65 +368,6 @@ def validate_chem_phase_values(chem_data, start_row):
     except Exception as e:
         logging.error(f"An error occurred during chemical data validation: {e}")
         print(f"An error occurred during chemical data validation: {e}")
-
-
-# def validate_value(val, cell_location):
-#     """
-#     Validates a single chemical value, returning an appropriate error message if issues are found.
-
-#     Parameters:
-#         val: The value to validate.
-#         cell_location (str): The Excel cell location of the value for logging purposes.
-
-#     Returns:
-#         str: An error message if the value is invalid, None otherwise.
-#     """
-
-#     if isinstance(val, str):
-#         val_lower = val.lower()
-
-#         if "(" in val_lower or ")" in val_lower:
-#             return f"'{val}' (Excel Cell {cell_location}) is not valid. Please provide an absolute uncertainty."
-
-#         # Checking for symbols indicating limits and their correctness
-#         if val_lower.startswith((">", "<", "≤", "≥")):
-#             # Log initial detection of symbol
-#             initial_message = f"'{val}' (Excel Cell {cell_location}) contains a symbol."
-#             logging.warning(initial_message)
-
-#             # Check numeric validity of the part after the symbol
-#             numeric_part = val[1:].strip()
-#             if not numeric_part.replace(".", "", 1).isdigit():
-#                 return f"'{val}' (Excel Cell {cell_location}) is not valid, as it is not numeric."
-#             else:
-#                 return None  # If valid, no further checks are needed
-
-#     if isinstance(
-#         val, str
-#     ):  # Check if the value is a string to handle string-specific validations
-#         val_lower = val.lower()  # Convert value to lowercase to standardize checks
-#         # Check for non-detects and placeholder values
-#         if val_lower in ["nd", "n.d.", "n.d"]:
-#             return f"'{val}' (Excel Cell {cell_location}) is not valid. Use 'bdl' if below detection limit."
-#         # Check for and validate symbols indicating limits
-#         elif val_lower.startswith("≤"):
-#             return f"'{val}' (Excel Cell {cell_location}) is not valid. Replace '≤' with '<='."
-#         elif val_lower.startswith("≥"):
-#             return f"'{val}' (Excel Cell {cell_location}) is not valid. Replace '≥' with '>='."
-#         elif any(val_lower.startswith(sym) for sym in [">", "<", ">=", "<="]):
-#             # Validate the numeric part after the symbol
-#             numeric_part = val[1:].strip()
-#             if not numeric_part.replace(".", "", 1).isdigit():
-#                 return f"'{val}' (Excel Cell {cell_location}) is not valid. The part after '{val[0]}' must be numeric."
-#         elif "≌" in val_lower:
-#             return f"'{val}' (Excel Cell {cell_location}) is not valid. Remove ≌."
-#     # Handling for placeholders indicating no measurement
-#     elif val == "-":
-#         return f"'-' in (Excel Cell {cell_location}) is not valid. Leave cell blank if not measured."
-#     # Handling zero with specific instructions
-#     elif val == 0:
-#         return f"0 in (Excel Cell {cell_location}) is not valid. Use 'bdl' for below detection limit values and leave cell blank if not measured."
-#     return None
 
 
 def validate_symbol(val, cell_location):
@@ -457,7 +426,7 @@ def validate_full_phase(val, cell_location):
     if isinstance(val, str):
         val_lower = val.lower()  # Convert value to lowercase to standardize comparison
         if val_lower not in accepted_phases:
-            return f"'{val}' (Excel Cell {cell_location}) is not a valid full phase. Please check for typos or reexamine the list of accepted phases on the GitHub Wiki."
+            return f"'{val}' (Excel Cell {cell_location}) contains invalid full phase names. Please check for typos or reexamine the list on the GitHub Wiki."
     return None
 
 
@@ -488,7 +457,7 @@ def validate_phase_list(val, cell_location):
         invalid_phases = [phase for phase in phases if phase not in accepted_phases]
         if invalid_phases:
             invalid_list = ", ".join(invalid_phases)
-            return f"Invalid phases detected (Excel Cell {cell_location}): {invalid_list}. Please check for typos or reexamine the list of accepted abbreviated phases on the GitHub Wiki."
+            return f"'{invalid_list}' (Excel Cell {cell_location}) contains invalid phase abbreviations. Please check for typos or reexamine the list on the GitHub Wiki."
 
     return None
 
@@ -523,8 +492,66 @@ def validate_required_fields(chem_data, start_row):
                     )  # Get Excel column
                     cell_location = f"{excel_column}{row_number}"
                     logging.error(
-                        f"Missing value found at {cell_location}. Please provide a value for '{col}'."
+                        f"Missing value found at Excel Cell {cell_location}. Please provide a value for '{col}'."
                     )
+
+
+def validate_buffer(data, start_row):
+    """
+    Validates that the fO2 values in a DataFrame match an accepted list of abbreviations or is numeric.
+    Logs a warning if any fO2 values do not match.
+
+    Parameters:
+        data (DataFrame): DataFrame containing the buffer data.
+        start_row (int): Row index where data headers are located.
+    """
+
+    # Scrape the accepted buffer values
+    df = phase_scrape(link="../data/fO2.html")
+    accepted_buffer = df["Abbreviation"].str.lower().tolist()
+
+    # Check each buffer value in the DataFrame
+    if 'fO2' in data.columns:
+        for i, buffer_value in enumerate(data['fO2']):
+            buffer_value_str = str(buffer_value).lower()  # Ensure numeric values are converted to strings for processing
+            try:
+                float(buffer_value)  # Try to convert to float
+                continue  # If successful, it's numeric and valid, continue to next iteration
+            except ValueError:
+                # If conversion fails, check if it matches any abbreviation
+                if not any(abbreviation in buffer_value_str for abbreviation in accepted_buffer):
+                    row_number = i + start_row  # Adjust row number based on starting row index
+                    excel_column = idx_to_col(data.columns.get_loc('fO2') + 1)  # Excel column index
+                    cell_location = f"{excel_column}{row_number}"
+                    logging.warning(
+                    f"'{buffer_value}' (Excel Cell {cell_location}) does not match any accepted buffers. Please check for typos or reexamine the list on the GitHub Wiki."
+                    )
+
+
+def validate_methods(data, start_row):
+    """
+    Validates that the TECHNIQUE values in a DataFrame match an accepted list of techniques.
+    Logs a warning if any TECHNIQUE values do not match.
+
+    Parameters:
+        data (DataFrame): DataFrame containing the technique data.
+        start_row (int): Row index where data headers are located.
+    """
+
+    # Scrape the accepted techniques
+    df = phase_scrape(link="../data/methods.html")
+    accepted_methods = df["name"].str.lower().tolist()
+
+    if 'TECHNIQUE' in data.columns:
+        for i, technique in enumerate(data['TECHNIQUE']):
+            technique_str = str(technique).lower()  # Convert to lowercase for case-insensitive comparison
+            if technique_str not in accepted_methods:
+                row_number = i + start_row  # Adjust row number based on starting row index
+                excel_column = idx_to_col(data.columns.get_loc('TECHNIQUE') + 1)  # Excel column index
+                cell_location = f"{excel_column}{row_number}"
+                logging.warning(
+                    f"'{technique}' (Excel Cell {cell_location}) does not match any accepted techniques. Please check for typos or reexamine the list on the GitHub Wiki."
+                )
 
 
 # %%
@@ -618,6 +645,7 @@ def validate_all(upload_data, log_filename):
 
     logging.info("\nSTARTING VALIDATION FOR SHEET '2 Experiments'\n")
     validate_required_fields(dat_2, start_row=7)
+    validate_buffer(dat_2, start_row=7)
 
     logging.info("\nSTARTING VALIDATION FOR SHEET '3 Bulk (Starting Materials)'\n")
     validate_metadata(chem_data_info_3, start_col='H')
@@ -636,6 +664,7 @@ def validate_all(upload_data, log_filename):
 
     logging.info("\nSTARTING VALIDATION FOR SHEET '7 Primary Method Metadata' and '8 Method-Specific Metadata'\n")
     validate_method_codes(chem_data_info_3, chem_data_info_4, chem_data_info_6, dat_7, dat_8)
+    validate_methods(dat_7, start_row=7)
 
     logging.info("\nVALIDATION COMPLETE FOR ALL SHEETS\n")
 
