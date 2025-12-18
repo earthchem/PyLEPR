@@ -4,18 +4,23 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pylepr"
-version = "0.0.1"
+version = "0.1.0"
 authors = [
-  { name="Aaron S. Wolf", email="aswolf@umich.edu" },
+    { name = "Paula Antoshechkina", email = "psmith@gps.caltech.edu"},
+    { name = "Sarah Shi", email = "sarah.c.shi@gmail.com" },
+    { name = "Aaron S. Wolf", email = "aswolf@umich.edu" },
 ]
 description = "A validation package for LEPR"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = ["ipykernel>=6.29.5", "pandas>=2.2.3", "openpyxl>=3.1.5", "bs4>=0.0.2"]
+license = {text = "MIT"}
 
 [project.urls]
 "Homepage" = "https://github.com/earthchem/PyLEPR"
+

@@ -403,7 +403,7 @@ def validate_value(val, cell_location):
         symbol_error = validate_symbol(val, cell_location)
         if symbol_error:
             return symbol_error
-        
+
 
 
 def validate_full_phase(val, cell_location):
@@ -555,6 +555,7 @@ def validate_methods(data, start_row):
 # %%
 
 
+#def validate_device_codes(data_device, primary_device, secondary_device):
 def validate_device_codes(data_device, data_metadata):
     """
     Validates the consistency of 'DEVICE' codes between two data sources. It logs errors for any device codes
@@ -605,17 +606,17 @@ def validate_method_codes(
     unique_to_data_methods = np.setdiff1d(unique_data_methods, unique_methods)
     if unique_to_data_methods.size > 0:
         logging.error(
-            f"Unique METHOD CODE {unique_to_data_methods} in Sheets '3 Bulk (Starting Materials), 4 Bulk (Run Products), or 6 Data' not found in Sheets '7 Primary Method Metadata or 8 Method-Specific Metadata'."
+            f"Unique METHOD CODE {unique_to_data_methods} in Sheets '3 Bulk (Starting Materials), 4 Bulk (Run Products), or 7 Data' not found in Sheets '8 Primary Method Metadata or 9 Method-specific Metadata'."
         )
 
     unique_to_methods = np.setdiff1d(unique_methods, unique_data_methods)
     if unique_to_methods.size > 0:
         logging.error(
-            f"Unique METHOD CODE {unique_to_methods} in Sheets '7 Primary Method Metadata or 8 Method-Specific Metadata' not found in Sheets '3 Bulk (Starting Materials), 4 Bulk (Run Products), or 6 Data'."
+            f"Unique METHOD CODE {unique_to_methods} in Sheets '8 Primary Method Metadata or 9 Method-specific Metadata' not found in Sheets '3 Bulk (Starting Materials), 4 Bulk (Run Products), or 7 Data'."
         )
 
 
-# %% 
+# %%
 
 
 def validate_all(upload_data, log_filename):
@@ -628,7 +629,8 @@ def validate_all(upload_data, log_filename):
         log_filename (str): The path and name of the log file where the validation process details will be recorded.
 
     Description:
-        This function initializes the logging configuration, extracts and validates data from specific sheets within the provided workbook. It logs the start and completion of validation for each sheet, ensuring that all necessary validations are performed and recorded sequentially for '2 Experiments', '3 Bulk (Starting Materials)', '4 Bulk (Run Products)', '5 Device Metadata', '6 Data', '7 Primary Method Metadata', and '8 Method-Specific Metadata'.
+        This function initializes the logging configuration, extracts and validates data from specific sheets within the provided workbook.
+        It logs the start and completion of validation for each sheet, ensuring that all necessary validations are performed and recorded sequentially for '2 Experiments', '3 Bulk (Starting Materials)', '4 Bulk (Run Products)', '5 Device Metadata', '6 Data', '7 Primary Method Metadata', and '8 Method-Specific Metadata'.
     """
 
     begin_logging(log_filename)
@@ -636,10 +638,11 @@ def validate_all(upload_data, log_filename):
     dat_2 = extract_data(upload_data, sheet='2 Experiments', start_col='A', start_row=7)
     chem_data_3, chem_data_info_3 = extract_chem_data(upload_data, sheet='3 Bulk (Starting Materials)', start_col='H', start_row=7)
     chem_data_4, chem_data_info_4 = extract_chem_data(upload_data, sheet='4 Bulk (Run Products)', start_col='F', start_row=7)
-    dat_5 = extract_data(upload_data, sheet='5 Device Metadata', start_col='A', start_row=7)
-    chem_data_6, chem_data_info_6 = extract_chem_data(upload_data, sheet='6 Data', start_col='H', start_row=7)
-    dat_7 = extract_data(upload_data, sheet='7 Primary Method Metadata', start_col='A', start_row=7)
-    dat_8 = extract_data(upload_data, sheet='8 Method-Specific Metadata', start_col='A', start_row=7)
+    dat_5 = extract_data(upload_data, sheet='5 Primary Device Metadata', start_col='A', start_row=7)
+    dat_6 = extract_data(upload_data, sheet='6 Device-specific Metadata', start_col='A', start_row=7)
+    chem_data_7, chem_data_info_7 = extract_chem_data(upload_data, sheet='7 Data', start_col='H', start_row=7)
+    dat_8 = extract_data(upload_data, sheet='8 Primary Method Metadata', start_col='A', start_row=7)
+    dat_9 = extract_data(upload_data, sheet='9 Method-specific Metadata', start_col='A', start_row=7)
 
     logging.info("\nSTARTING VALIDATION FOR SHEET '2 Experiments'\n")
     validate_required_fields(dat_2, start_row=7)
@@ -653,16 +656,16 @@ def validate_all(upload_data, log_filename):
     validate_metadata(chem_data_info_4, start_col='F')
     validate_chem_phase_values(chem_data_4, start_row=7)
 
-    logging.info("\nSTARTING VALIDATION FOR SHEET '5 Device Metadata'\n")
-    validate_device_codes(dat_2, dat_5)
+    #logging.info("\nSTARTING VALIDATION FOR SHEET '5 Primary Device Metadata' and '6 Device-specific Metadata'\n")
+    #validate_device_codes(dat_2, dat_5, dat_6)
 
-    logging.info("\nSTARTING VALIDATION FOR SHEET '6 Data'\n")
-    validate_metadata(chem_data_info_6, start_col='H')
-    validate_chem_phase_values(chem_data_6, start_row=7)
+    logging.info("\nSTARTING VALIDATION FOR SHEET '7 Data'\n")
+    validate_metadata(chem_data_info_7, start_col='H')
+    validate_chem_phase_values(chem_data_7, start_row=7)
 
-    logging.info("\nSTARTING VALIDATION FOR SHEET '7 Primary Method Metadata' and '8 Method-Specific Metadata'\n")
-    validate_method_codes(chem_data_info_3, chem_data_info_4, chem_data_info_6, dat_7, dat_8)
-    validate_methods(dat_7, start_row=7)
+    logging.info("\nSTARTING VALIDATION FOR SHEET '8 Primary Method Metadata' and '9 Method-specific Metadata'\n")
+    validate_method_codes(chem_data_info_3, chem_data_info_4, chem_data_info_7, dat_8, dat_9)
+    validate_methods(dat_8, start_row=7)
 
     logging.info("\nVALIDATION COMPLETE FOR ALL SHEETS\n")
 

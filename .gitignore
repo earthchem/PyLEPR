@@ -5,3 +5,14 @@ data/.~lock.upload_validation.xlsx#
 *.egg-info
 .DS_Store
 ~$*
+
+data/temp_validation.xlsx
+data/.~lock.temp_validation.xlsx#
+notebooks/*_temp.ipynb
+notebooks/*_temp.log
+
+.pdm*
+pdm*
+*_temp.toml
+
+dist/*
