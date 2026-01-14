@@ -6,9 +6,9 @@ build-backend = "setuptools.build_meta"
 name = "pylepr"
 version = "0.1.0"
 authors = [
-    { name = "Paula Antoshechkina", email = "psmith@gps.caltech.edu"},
+    { name = "Aaron S. Wolf", email = "aswolf@seti.org" },
     { name = "Sarah Shi", email = "sarah.c.shi@gmail.com" },
-    { name = "Aaron S. Wolf", email = "aswolf@umich.edu" },
+    { name = "Paula Antoshechkina", email = "psmith@gps.caltech.edu"},
 ]
 description = "A validation package for LEPR"
 readme = "README.md"
